@@ -10,9 +10,9 @@ readme = "README.md"
 description = ""
 license = {text = "BSD-3-Clause"}
 
-keywords = [...]
+keywords = []
 dependencies = ["numpy", "scipy", "openpmd_viewer >= 1.9"]
-classifiers = [...]
+classifiers = []
 dynamic = ["version"]
 
 [project.urls]
