@@ -15,7 +15,7 @@ import numpy as np
 from scipy.constants import c
 from os.path import exists
 from os import makedirs, getcwd
-from PICAnalysisTools.utils.unit_conversion import magnitude_conversion, get_order_letter
+from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, get_order_letter
 
 
 class LaserProperties():

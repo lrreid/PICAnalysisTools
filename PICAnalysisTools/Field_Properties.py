@@ -17,7 +17,7 @@ TO DO:
 import numpy as np
 from scipy.constants import c, m_e, e, pi
 from scipy.signal import hilbert
-from PICAnalysisTools.utils.unit_conversion import magnitude_conversion
+from PICAnalysisTools.utils.unit_conversions import magnitude_conversion
 
 class plasma_fields():
 

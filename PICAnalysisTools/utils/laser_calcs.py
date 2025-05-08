@@ -6,7 +6,7 @@ Simple laser calculations and conversions
 
 import numpy as np
 from scipy.constants import c, e, pi, epsilon_0, m_e
-from PICAnalysisTools.utils.unit_conversion import magnitude_conversion, magnitude_conversion_area
+from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, magnitude_conversion_area
 
 
 def a0_from_intensity(Int, lambda0=800, int_unit="centi", wavelength_unit="nano"):
