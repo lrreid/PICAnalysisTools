@@ -1,6 +1,11 @@
 # Python cache files
 __pycache__
 
+
+# Local folders
+*.egg-info
+\build
+
 # Other
 *.pdf
 *.pptx

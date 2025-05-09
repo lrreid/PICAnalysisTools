@@ -7,6 +7,10 @@ TO DO:
     - Add doc strings
     - Add lwfa scalings? separate script?
 
+    
+Calculations for plasma wavelength, skin depth, frequency and angular frequency are all wrong. 
+Numbers are correct but order of magnitude is not. Think this is an error in the unit conversion function!
+
 """
 
 import numpy as np
@@ -23,11 +27,11 @@ class PlasmaDen_Conversions():
         self.freq_unit       = freq_unit
         self.skin_unit       = skin_unit
         self.time_unit       = time_unit
-        self.n_e_SI          = magnitude_conversion_vol(self.n_e, self.den_unit, "")    # convert plasma density to si units (m^-3)
-        self.w_p, self.f_p   = self.plasma_frequency_from_density()                          # Plasma (angular) frequency
-        self.lambda_p        = self.plasma_wavelength_from_density()                         # Plasma wavelength
-        self.k_p, self.skin_depth = self.plasma_wavevector_from_density()                    # plasma wavevector and skin depth
-        self.T_p             = self.plasma_period_from_density()                             # Plasma period
+        self.n_e_SI          = magnitude_conversion_vol(self.n_e, self.den_unit, "")        # convert plasma density to si units (m^-3)
+        self.w_p, self.f_p   = self.plasma_frequency_from_density()                         # Plasma (angular) frequency
+        self.lambda_p        = self.plasma_wavelength_from_density()                        # Plasma wavelength
+        self.k_p, self.skin_depth = self.plasma_wavevector_from_density()                   # plasma wavevector and skin depth
+        self.T_p             = self.plasma_period_from_density()                            # Plasma period
 
     def plasma_wavelength_from_density(self):
 
