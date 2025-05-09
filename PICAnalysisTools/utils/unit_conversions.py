@@ -53,40 +53,51 @@ def order_of_magnitude(unit):
                return 1e30
 
 
-def magnitude_conversion(values, unit_1, unit_2):
-     # To check: Why is the ratio the other way around for this one but not area or volume?
+def magnitude_conversion(values, unit_1, unit_2, reciprocal_units = False):
 
      if unit_1 == unit_2:
-          return 1, values
+          return values
      else:
           order_1 = order_of_magnitude(unit_1)
           order_2 = order_of_magnitude(unit_2)
 
-          values_new = (order_1/order_2) * values
+          if reciprocal_units == True:
+               values_new = (order_2/order_1) * values
+          elif reciprocal_units == False:
+               values_new = (order_1/order_2) * values
+
+          return values_new
+
+def magnitude_conversion_area(values, unit_1, unit_2, reciprocal_units = False):
+
+     if unit_1 == unit_2:
+          return values
+     else:
+          order_1 = order_of_magnitude(unit_1)
+          order_2 = order_of_magnitude(unit_2)
+
+          if reciprocal_units == True:
+               values_new = (order_2/order_1)**2 * values
+          elif reciprocal_units == False:
+               values_new = (order_1/order_2)**2 * values
+
+          return values_new     
+
+def magnitude_conversion_vol(values, unit_1, unit_2, reciprocal_units = False):
+
+     if unit_1 == unit_2:
+          return values
+     else:
+          order_1 = order_of_magnitude(unit_1)
+          order_2 = order_of_magnitude(unit_2)
+
+          if reciprocal_units == True:
+               values_new = (order_2/order_1)**3 * values
+          elif reciprocal_units == False:
+               values_new = (order_1/order_2)**3 * values
+
           return values_new
      
-
-def magnitude_conversion_vol(values, unit_1, unit_2):
-     if unit_1 == unit_2:
-          return 1, values
-     else:
-          order_1 = order_of_magnitude(unit_1)
-          order_2 = order_of_magnitude(unit_2)
-
-          values_new = (order_2/order_1)**3 * values
-          return values_new
-     
-
-def magnitude_conversion_area(values, unit_1, unit_2):
-     if unit_1 == unit_2:
-          return 1, values
-     else:
-          order_1 = order_of_magnitude(unit_1)
-          order_2 = order_of_magnitude(unit_2)
-
-          values_new = (order_2/order_1)**2 * values
-          return values_new
-
 
 def get_order_letter(unit):
      match unit:

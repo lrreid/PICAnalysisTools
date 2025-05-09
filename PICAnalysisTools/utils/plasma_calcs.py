@@ -27,7 +27,7 @@ class PlasmaDen_Conversions():
         self.freq_unit       = freq_unit
         self.skin_unit       = skin_unit
         self.time_unit       = time_unit
-        self.n_e_SI          = magnitude_conversion_vol(self.n_e, self.den_unit, "")        # convert plasma density to si units (m^-3)
+        self.n_e_SI          = magnitude_conversion_vol(self.n_e, self.den_unit, "", reciprocal_units = True)        # convert plasma density to si units (m^-3)
         self.w_p, self.f_p   = self.plasma_frequency_from_density()                         # Plasma (angular) frequency
         self.lambda_p        = self.plasma_wavelength_from_density()                        # Plasma wavelength
         self.k_p, self.skin_depth = self.plasma_wavevector_from_density()                   # plasma wavevector and skin depth
@@ -68,7 +68,7 @@ def plasma_density_from_frequency(w_p, den_unit="centi"):
 
     n_e = (w_p**2*epsilon_0*m_e)/(e**2)
 
-    return magnitude_conversion_vol(n_e, "", den_unit)
+    return magnitude_conversion_vol(n_e, "", den_unit, reciprocal_units = True)
 
 
 def plasma_density_from_wavelength(lambda_p, wavelength_unit = "", den_unit="centi"):
@@ -77,7 +77,7 @@ def plasma_density_from_wavelength(lambda_p, wavelength_unit = "", den_unit="cen
     
     n_e = epsilon_0*m_e*((2*pi*c)/(lambda_p_SI*e))**2
 
-    return magnitude_conversion_vol(n_e, "", den_unit)
+    return magnitude_conversion_vol(n_e, "", den_unit, reciprocal_units = True)
 
 
 def plasma_density_from_period(T_p, time_unit = "femto", den_unit="centi"):
@@ -86,19 +86,19 @@ def plasma_density_from_period(T_p, time_unit = "femto", den_unit="centi"):
 
     n_e = epsilon_0*m_e* ((2*pi)/(e*T_p_SI))**2
 
-    return magnitude_conversion_vol(n_e, "", den_unit)
+    return magnitude_conversion_vol(n_e, "", den_unit, reciprocal_units = True)
 
 def plasma_density_from_wavevector(k_p, den_unit="centi"):
 
     n_e = ((c*k_p)/e)**2 * epsilon_0*m_e
 
-    return magnitude_conversion_vol(n_e, "", den_unit)
+    return magnitude_conversion_vol(n_e, "", den_unit, reciprocal_units = True)
 
 
 def critical_power(n_e, lambda0 = 800e-9, den_unit = "centi", wavelength_unit = "nano", power_unit="Tera"):
     # Calculate the critical power for laser self-focusing in a plasma.
 
-    n_e_SI     = magnitude_conversion_vol(n_e, den_unit, "")
+    n_e_SI     = magnitude_conversion_vol(n_e, den_unit, "", reciprocal_units = True)
     lambda0_SI = magnitude_conversion(lambda0, wavelength_unit, "")                  # Get laser wavelength in SI unit (m)
 
     Pcrit = (32*pi**3*epsilon_0**2*m_e**3*c**7)/(n_e_SI*e**4*lambda0_SI**2)  # critical power in W
@@ -112,7 +112,7 @@ def plasma_density_from_critical_power(Pcrit, lambda0, power_unit="Tera", wavele
     lambda0_SI = magnitude_conversion(lambda0, wavelength_unit, "")                  # Get laser wavelength in SI unit (m)
     n_e        = (32*pi**3*epsilon_0**2*m_e**3*c**7)/(Pcrit_SI*e**4*lambda0_SI**2)      # Plasma density at critical power (m^-3)
 
-    return magnitude_conversion_vol(n_e, "", den_unit)
+    return magnitude_conversion_vol(n_e, "", den_unit, reciprocal_units = True)
 
 
 def critical_density(lambda0, wavelength_unit = "nano", den_unit = "centi" ):
@@ -120,20 +120,20 @@ def critical_density(lambda0, wavelength_unit = "nano", den_unit = "centi" ):
     lambda0_SI = magnitude_conversion(lambda0, wavelength_unit, "")         # Get laser wavelength in SI unit (m)
     n_c        = m_e*epsilon_0*((2*pi*c)/(lambda0_SI*e))**2                 # Critical density (m^-3)
 
-    return magnitude_conversion_vol(n_c, "", den_unit)
+    return magnitude_conversion_vol(n_c, "", den_unit, reciprocal_units = True)
 
 
 def critical_density_from_frequency(omega_l, den_unit = "centi"):
 
     n_c = (m_e*epsilon_0*omega_l**2)/(e**2)                                 # Critical density (m^-3)
 
-    return magnitude_conversion_vol(n_c, "", den_unit)
+    return magnitude_conversion_vol(n_c, "", den_unit, reciprocal_units = True)
 
 
 def plasma_refractive_index(lambda0, n_e, wavelength_unit = "nano", den_unit = "centi"):
 
     lambda0_SI = magnitude_conversion(lambda0, wavelength_unit, "")                  # Get laser wavelength in SI unit (m)
-    n_e_SI     = magnitude_conversion_vol(n_e, den_unit, "")
+    n_e_SI     = magnitude_conversion_vol(n_e, den_unit, "", reciprocal_units = True)
     eta        = np.sqrt(1 - ( (n_e_SI/(4*epsilon_0*m_e)) * ((e*lambda0_SI)/(pi*c))**2 ) )
 
     return eta
@@ -150,7 +150,7 @@ def wavebreaking_field(n_e, den_unit = "centi", field_unit = "Giga"):
     #w_p  = plasma_frequency_from_density(n_e)[0]
     #E_wb = (c*m_e*w_p)/e                           # Wave breaking field (V/m)
 
-    n_e_SI = magnitude_conversion_vol(n_e, den_unit, "")
+    n_e_SI = magnitude_conversion_vol(n_e, den_unit, "", reciprocal_units = True)
     E_wb   = c * np.sqrt((m_e*n_e_SI)/epsilon_0)
 
     return magnitude_conversion(E_wb, "", field_unit) 
