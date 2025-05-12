@@ -27,7 +27,7 @@ def a0_from_intensity(Int, lambda0=800, int_unit="centi", wavelength_unit="nano"
     """
 
     lambda0_SI = magnitude_conversion(lambda0, wavelength_unit, "")
-    Int_SI     = magnitude_conversion_area(Int, int_unit, "")
+    Int_SI     = magnitude_conversion_area(Int, int_unit, "", reciprocal_units = True)
     a0         = ((e*lambda0_SI)/(pi*m_e)) * np.sqrt((Int_SI)/(2*epsilon_0*c**5))           # laser a0
     
     return a0
@@ -52,7 +52,7 @@ def intensity_from_a0(a0, lambda0=800, wavelength_unit="nano", int_unit="centi")
 
     Int = (2*a0**2*pi**2*epsilon_0*m_e**2*c**5)/(e**2*lambda0_SI**2)
     
-    return magnitude_conversion_area(Int, "", int_unit)
+    return magnitude_conversion_area(Int, "", int_unit, reciprocal_units = True)
 
 
 def Gaussian_laser_intensitiy(Energy, tau_FWHM, w0, lambda0=800, energy_unit="milli", time_unit = "femto", spot_unit="micro", wavelength_unit="nano", int_unit="centi"):
@@ -85,7 +85,7 @@ def Gaussian_laser_intensitiy(Energy, tau_FWHM, w0, lambda0=800, energy_unit="mi
     Int = (2*Energy_SI)/(tau_FWHM_SI*pi*w0_SI**2)                                                # Intensity (W/m^2). Gaussian profile assumed.
     a0  = ((e*lambda0_SI)/(pi*m_e*c**2*w0_SI)) * np.sqrt( Energy_SI/(pi*epsilon_0*c*tau_FWHM_SI) )  # Laser amplitude. Gaussian profile assumed.
 
-    return a0, magnitude_conversion_area(Int, "", int_unit)
+    return a0, magnitude_conversion_area(Int, "", int_unit, reciprocal_units = True)
 
 def ponderomotive_energy(a0, energy_unit="kilo"):
 

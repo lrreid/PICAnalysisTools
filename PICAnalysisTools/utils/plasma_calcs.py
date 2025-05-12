@@ -71,7 +71,7 @@ def plasma_density_from_frequency(w_p, den_unit="centi"):
     return magnitude_conversion_vol(n_e, "", den_unit, reciprocal_units = True)
 
 
-def plasma_density_from_wavelength(lambda_p, wavelength_unit = "", den_unit="centi"):
+def plasma_density_from_wavelength(lambda_p, wavelength_unit = "micro", den_unit="centi"):
 
     lambda_p_SI = magnitude_conversion(lambda_p, wavelength_unit, "" ) # convert plasma period to time in SI units (s).
     
@@ -94,8 +94,12 @@ def plasma_density_from_wavevector(k_p, den_unit="centi"):
 
     return magnitude_conversion_vol(n_e, "", den_unit, reciprocal_units = True)
 
+def plasma_density_from_skin_depth():
+    # Function to be written
+    return None
 
-def critical_power(n_e, lambda0 = 800e-9, den_unit = "centi", wavelength_unit = "nano", power_unit="Tera"):
+
+def critical_power(n_e, lambda0 = 800, den_unit = "centi", wavelength_unit = "nano", power_unit="Tera"):
     # Calculate the critical power for laser self-focusing in a plasma.
 
     n_e_SI     = magnitude_conversion_vol(n_e, den_unit, "", reciprocal_units = True)

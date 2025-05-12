@@ -61,9 +61,9 @@ def magnitude_conversion(values, unit_1, unit_2, reciprocal_units = False):
           order_1 = order_of_magnitude(unit_1)
           order_2 = order_of_magnitude(unit_2)
 
-          if reciprocal_units == True:
+          if reciprocal_units is True:
                values_new = (order_2/order_1) * values
-          elif reciprocal_units == False:
+          elif reciprocal_units is False:
                values_new = (order_1/order_2) * values
 
           return values_new
@@ -76,9 +76,9 @@ def magnitude_conversion_area(values, unit_1, unit_2, reciprocal_units = False):
           order_1 = order_of_magnitude(unit_1)
           order_2 = order_of_magnitude(unit_2)
 
-          if reciprocal_units == True:
+          if reciprocal_units is True:
                values_new = (order_2/order_1)**2 * values
-          elif reciprocal_units == False:
+          elif reciprocal_units is False:
                values_new = (order_1/order_2)**2 * values
 
           return values_new     
@@ -91,9 +91,9 @@ def magnitude_conversion_vol(values, unit_1, unit_2, reciprocal_units = False):
           order_1 = order_of_magnitude(unit_1)
           order_2 = order_of_magnitude(unit_2)
 
-          if reciprocal_units == True:
+          if reciprocal_units is True:
                values_new = (order_2/order_1)**3 * values
-          elif reciprocal_units == False:
+          elif reciprocal_units is False:
                values_new = (order_1/order_2)**3 * values
 
           return values_new
