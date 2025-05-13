@@ -7,7 +7,7 @@ name = "PICAnalysisTools"
 authors = [{name = "Lewis Reid", email = "Lewis.Reid@stfc.ac.uk"}]
 requires-python = ">= 3.10"
 readme = "README.md"
-description = ""
+description = "Python package with tools to extract data from PIC simulations using openPMD-viewer and preform analysis on the data."
 license = {text = "BSD-3-Clause"}
 
 keywords = []

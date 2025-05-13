@@ -7,7 +7,6 @@ Check that all unit order of magnitde conversions are working correctly by testi
 import numpy as np
 from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, magnitude_conversion_area, magnitude_conversion_vol
 
-
 #%% Length check
 
 k = 0

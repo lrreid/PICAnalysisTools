@@ -7,9 +7,10 @@ read_ionization_energies() adapted from a function of the same name in fbpic (re
 import numpy as np
 import re
 import os
-from PICAnalysisTools.utils.elements import get_element_name
 from scipy.constants import c, e, pi, epsilon_0, m_e
-
+from PICAnalysisTools.utils.elements import get_element_name
+from PICAnalysisTools.utils.laser_calcs import a0_from_intensity
+from PICAnalysisTools.utils.unit_conversions import magnitude_conversion_area
 
 def read_ionization_energies( element, unit="eV" ):
     """
@@ -75,7 +76,7 @@ def read_ionization_energies( element, unit="eV" ):
     return( energies, ion_charge )
 
 
-def ionisation_intensity_theshold(element, lambda0=800e-9):
+def ionisation_intensity_theshold(element, lambda0=800, wavelength_unit="nano", int_unit="centi"):
     """
     
     Parameters
@@ -105,7 +106,7 @@ def ionisation_intensity_theshold(element, lambda0=800e-9):
     
     Z   = ion_q + 1                                                         # final charge state of the ion
     Int = ((pi**2 * c * epsilon_0**3 * (Ip*e)**4) / (2* Z**2 * e**6) )      # intensity Wm^-2
-    a0  = ((e*lambda0)/(pi*m_e)) * np.sqrt(Int/(2*epsilon_0*c**5))          # laser a0
+    a0  = a0_from_intensity(Int, lambda0=lambda0, int_unit="", wavelength_unit=wavelength_unit)
     
     
-    return Int*1e-4, a0, element_name
+    return element_name, magnitude_conversion_area(Int, "", int_unit, reciprocal_units = True), a0

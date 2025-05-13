@@ -5,6 +5,12 @@ Check that the functions give the expected answers with the correct units. Compa
 
 """
 
+##################################################################################################################
+##################################################################################################################
+####################### SCRIPT NOT COMPATIBLE WITH CHANGES MADE TO FUNCTIONS AND CLASSES #########################
+##################################################################################################################
+##################################################################################################################
+
 import numpy as np
 from scipy.constants import c, e, pi, epsilon_0, m_e
 from PICAnalysisTools.utils.plasma_calcs import PlasmaDen_Conversions
