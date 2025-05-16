@@ -295,7 +295,7 @@ class PhaseSpace(ParticleEnergy):
         E_Phase, _, _ = np.histogram2d(self.Ek, z_converted, bins=(E_Bins, Z_Bins), weights=self.w )
         Order         = np.floor(np.log10(np.max(E_Phase)))
 
-        if Centre_z == True:
+        if Centre_z is True:
             # Set the centre of the beam to r = 0
             # Particularly useful if plotting z axis.
             col_sum  = E_Phase.sum(axis=0)                          # Sum all columns of histogram
@@ -308,7 +308,7 @@ class PhaseSpace(ParticleEnergy):
         else:
             z_at_max = 0
 
-        if Find_Lineouts == True:
+        if Find_Lineouts is True:
             # Lineout plots are: plt.plot(Row_sum, E_Bins[:-1]) and plt.plot(Z_line[:-1], Col_sum)
             # I don't like the return having two different lengths. This can't be "good" python. I do want the option for calculating the lineouts
 
@@ -345,7 +345,7 @@ class PhaseSpace(ParticleEnergy):
         t_max = t_max - t_at_max
         t_min = t_min - t_at_max
 
-        if Find_Lineouts == True:
+        if Find_Lineouts is True:
             # Lineout plots are: plt.plot(Row_sum, E_Bins[:-1]) and plt.plot(Z_line[:-1], Col_sum)
 
             Ene_height = (Spec_Max-Spec_Min) * lineout_height       # lineout 20% of plot window in height
@@ -380,7 +380,7 @@ class PhaseSpace(ParticleEnergy):
         Trans_phase, _, _ = np.histogram2d(Div_r, r, bins=(D_Bins, R_Bins), weights=self.w )
         Order_Trans       = np.floor(np.log10(np.amax(Trans_phase)))
 
-        if Find_Lineouts == True:
+        if Find_Lineouts is True:
             # Lineout plots are: plt.plot(Row_sum_Trans, D_Bins[:-1]) and plt.plot(R_line, col_sum_Trans)
             # This only makes sense with x and y coords so no need to set centre of beam to zero, unlike Energy_r_space()
             X_height   = (2*max_div) * lineout_height                     # lineout 20% of plot window in height
@@ -400,7 +400,8 @@ class BeamProjection():
 
     """
     TO DO:
-        - create option for the binning to cover the whole simulation window, not just around the beam limits.
+        - create option (or second function) for the binning to cover the whole simulation window, not just around the beam limits.
+        - What is the most efficient way to get simulation window limits?
     """
 
     def __init__(self, a, b, w, r_unit = "micro"):
@@ -408,6 +409,8 @@ class BeamProjection():
         self.b = b
         self.w = w
         self.r_unit = r_unit
+        self.a_converted  = magnitude_conversion(self.a, "", self.r_unit)
+        self.b_converted  = magnitude_conversion(self.b, "", self.r_unit)
 
     def beam_projection(self, r_res, r_round, independant_bins=False, equal_bins=False):
         # independant is good for x vs z (or y vs z)
@@ -416,33 +419,39 @@ class BeamProjection():
         # equal_bins=False best for for x vs z (or y vs z)
         # equal_bins=True for x vs y
 
-        a_converted  = magnitude_conversion(self.a, "", self.r_unit)
-        b_converted  = magnitude_conversion(self.b, "", self.r_unit)
-
-        if independant_bins == True:
+        if independant_bins is True:
             
-            if equal_bins == True:
-                A_min, A_max, A_Bins = binning.get_bins_absolute(a_converted, r_res, r_round)
-                B_min, B_max, B_Bins = binning.get_bins_absolute(b_converted, r_res, r_round)
+            if equal_bins is True:
+                A_min, A_max, A_Bins = binning.get_bins_absolute(self.a_converted, r_res, r_round)
+                B_min, B_max, B_Bins = binning.get_bins_absolute(self.b_converted, r_res, r_round)
             else:
-                A_min, A_max, A_Bins = binning.get_bins(a_converted, r_res, r_round)
-                B_min, B_max, B_Bins = binning.get_bins(b_converted, r_res, r_round)
+                A_min, A_max, A_Bins = binning.get_bins(self.a_converted, r_res, r_round)
+                B_min, B_max, B_Bins = binning.get_bins(self.b_converted, r_res, r_round)
 
-            projection, _, _ = np.histogram2d(a_converted, b_converted, bins=(A_Bins, B_Bins), weights=self.w )
+            projection, _, _ = np.histogram2d(self.a_converted, self.b_converted, bins=(A_Bins, B_Bins), weights=self.w )
 
-            Order = np.floor(np.log10(np.amax(projection)))
-
-            return projection, Order, A_min, A_max, A_Bins, B_min, B_max, B_Bins
+            return projection, [A_min, A_max, B_min, B_max], A_Bins, B_Bins
 
         else:
 
-            if equal_bins == True:
-                r_min, r_max, R_Bins = binning.get_bins_absolute(np.concatenate((a_converted, b_converted)), r_res, r_round)
+            if equal_bins is True:
+                r_min, r_max, R_Bins = binning.get_bins_absolute(np.concatenate((self.a_converted, self.b_converted)), r_res, r_round)
             else:
-                r_min, r_max, R_Bins = binning.get_bins(np.concatenate((a_converted, b_converted)), r_res, r_round)
+                r_min, r_max, R_Bins = binning.get_bins(np.concatenate((self.a_converted, self.b_converted)), r_res, r_round)
 
-            projection, _, _ = np.histogram2d(a_converted, b_converted, bins=(R_Bins, R_Bins), weights=self.w )
+            projection, _, _ = np.histogram2d(self.a_converted, self.b_converted, bins=(R_Bins, R_Bins), weights=self.w )
 
-            Order = np.floor(np.log10(np.amax(projection)))
+            return projection, [r_min, r_max, r_min, r_max], R_Bins, R_Bins
+        
+    def beam_projection_fixed_window(self, window_extent, r_res):
+        # Calculate beam projection with user defined histogram limits.
+        # Useful for calcuating beam projection with whole simulation box view.
 
-            return projection, Order, r_min, r_max, R_Bins
+        window_extent_converted  = magnitude_conversion(np.array(window_extent), "", self.r_unit)
+
+        A_Bins = np.arange(window_extent_converted[0], window_extent_converted[1]+r_res, r_res)
+        B_Bins = np.arange(window_extent_converted[2], window_extent_converted[3]+r_res, r_res)
+
+        projection, _, _ = np.histogram2d(self.a_converted, self.b_converted, bins=(A_Bins, B_Bins), weights=self.w )
+
+        return projection, window_extent_converted, A_Bins, B_Bins
