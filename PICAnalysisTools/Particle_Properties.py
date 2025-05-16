@@ -19,7 +19,7 @@ from PICAnalysisTools.utils import binning, statistics, rounding
 
 class ParticleEnergy():
     # you should put types in here :  eg ux: float
-    def __init__(self, ux, uy, uz, q, w, energy_unit : str ="mega", charge_unit : str ="pico"):
+    def __init__(self, ux, uy, uz, q, w, energy_unit : str = "mega", charge_unit : str = "pico"):
         """
         Parameters
         ----------
@@ -66,7 +66,6 @@ class ParticleEnergy():
         """
         
         gamma  = np.sqrt(1 + self.ux ** 2 + self.uy ** 2 + self.uz ** 2)        # Get weighted average of the normalised momenta of each macroparticle
-        #Ek_MeV = ((m_e*c**2)/(e*1e6))*(gamma-1)                                 # Convert normalised momenta to energy in MeV 
         Ek = ((m_e*c**2)/e)*(gamma-1)                                           # Convert normalised momenta to energy in eV 
 
         return magnitude_conversion(Ek, "", self.energy_unit)
@@ -80,7 +79,7 @@ class ParticleEnergy():
             Total beam charge (C).
         """
 
-        charge = np.sum(self.w * self.q)                               # Calculate charge (C) within selection
+        charge = -1*np.sum(self.w * self.q)                               # Calculate charge (C) within selection
 
         return magnitude_conversion(charge, "", self.charge_unit)
     
@@ -150,7 +149,7 @@ class ParticleEnergy():
 
 class ParticleTransverseProperties:
 
-    def __init__(self, r, ur, z, uz, w, r_unit  : str ="micro", div_unit : str ="milli", emit_unit : str ="micro"):
+    def __init__(self, r, ur, z, uz, w, r_unit : str = "micro", div_unit : str = "milli", emit_unit : str = "micro"):
         """
         Parameters
         ----------
@@ -218,8 +217,8 @@ class ParticleTransverseProperties:
 
 class PhaseSpace(ParticleEnergy):
     
-    def __init__(self, x, y, z, ux, uy, uz, w, r_unit = "micro", energy_unit="mega", div_unit="milli", time_unit="femto"):
-        super().__init__(self)
+    def __init__(self, x, y, z, ux, uy, uz, w, r_unit = "micro", energy_unit= "mega", div_unit= "milli", time_unit= "femto"):
+        #super().__init__(self)
         """
         Parameters
         ----------
@@ -255,9 +254,23 @@ class PhaseSpace(ParticleEnergy):
         self.energy_unit = energy_unit
         self.div_unit    = div_unit
         self.time_unit   = time_unit
-        self.Ek          = self.get_particle_energy(self.energy_unit)
-        self.div_x       = self.get_divergence(self, Coord = 'x')
-        self.div_y       = self.get_divergence(self, Coord = 'y') # This won't work
+        self.Ek          = self.get_particle_energy()
+        self.div_x       = self.get_divergence(Coord = 'x')
+        self.div_y       = self.get_divergence(Coord = 'y') # This won't work
+
+    def get_particle_energy(self):
+        """
+        Returns
+        -------
+        Ek_converted : float
+            Energy of each beam macroparticles (default: MeV).
+        """
+        
+        gamma  = np.sqrt(1 + self.ux ** 2 + self.uy ** 2 + self.uz ** 2)        # Get weighted average of the normalised momenta of each macroparticle
+        Ek = ((m_e*c**2)/e)*(gamma-1)                                           # Convert normalised momenta to energy in eV 
+
+        return magnitude_conversion(Ek, "", self.energy_unit)
+
 
     def get_divergence(self, Coord = 'x'):
 
@@ -271,48 +284,45 @@ class PhaseSpace(ParticleEnergy):
 
         return magnitude_conversion(Div_r, "", self.div_unit)
 
-    def Energy_r_space(self, r, r_res, r_round, Spec_Res, E_Round, Centre_r=True, Find_Lineouts=True, lineout_height=0.2, equal_r_bins=False):
+    def Energy_z_space(self, z_res, z_round, Spec_Res, E_Round, Centre_z=True, Find_Lineouts=True, lineout_height=0.2):
 
         Spec_Min, Spec_Max, E_Bins = binning.get_bins(self.Ek, Spec_Res, E_Round)
 
-        r_converted = magnitude_conversion(r, "", self.r_unit)
+        z_converted = magnitude_conversion(self.z, "", self.r_unit)
 
-        if equal_r_bins == True:
-            r_min, r_max, R_Bins = binning.get_bins_absolute(r_converted, r_res, r_round)
-        else:
-            r_min, r_max, R_Bins = binning.get_bins(r_converted, r_res, r_round)
+        z_min, z_max, Z_Bins = binning.get_bins(z_converted, z_res, z_round)
 
-        E_Phase, _, _ = np.histogram2d(self.Ek_MeV, r_converted, bins=(E_Bins, R_Bins), weights=self.w )
+        E_Phase, _, _ = np.histogram2d(self.Ek, z_converted, bins=(E_Bins, Z_Bins), weights=self.w )
         Order         = np.floor(np.log10(np.max(E_Phase)))
 
-        if Centre_r == True:
+        if Centre_z == True:
             # Set the centre of the beam to r = 0
             # Particularly useful if plotting z axis.
             col_sum  = E_Phase.sum(axis=0)                          # Sum all columns of histogram
             PosZ     = np.argmax(col_sum)                           # Index of maximum value
-            r_at_max = R_Bins[PosZ] 
+            z_at_max = Z_Bins[PosZ] 
 
-            r_max = r_max - r_at_max
-            r_min = r_min - r_at_max
+            z_max = z_max - z_at_max
+            z_min = z_min - z_at_max
 
         else:
-            r_at_max = 0
+            z_at_max = 0
 
         if Find_Lineouts == True:
             # Lineout plots are: plt.plot(Row_sum, E_Bins[:-1]) and plt.plot(Z_line[:-1], Col_sum)
             # I don't like the return having two different lengths. This can't be "good" python. I do want the option for calculating the lineouts
 
             Ene_height = (Spec_Max-Spec_Min) * lineout_height       # lineout 20% of plot window in height
-            R_height   = (r_max - r_min) * lineout_height
+            R_height   = (z_max - z_min) * lineout_height
 
-            Row_sum = (R_height * rounding.normalise(np.sum(E_Phase, axis=1))) + (r_min)
-            Z_line  = R_Bins - r_at_max                                                 # Set centre of beam to z = 0
+            Row_sum = (R_height * rounding.normalise(np.sum(E_Phase, axis=1))) + (z_min)
+            Z_line  = Z_Bins - z_at_max                                                 # Set centre of beam to z = 0
             Col_sum = (Ene_height * rounding.normalise(np.sum(E_Phase, axis=0))) + Spec_Min
 
-            return E_Phase, Order, Spec_Min, Spec_Max, E_Bins, r_min, r_max, R_Bins, Row_sum, Z_line, Col_sum
+            return E_Phase, Order, Spec_Min, Spec_Max, E_Bins, z_min, z_max, Z_Bins, Row_sum, Z_line, Col_sum
 
         else:
-            return E_Phase, Order, Spec_Min, Spec_Max, E_Bins, r_min, r_max, R_Bins
+            return E_Phase, Order, Spec_Min, Spec_Max, E_Bins, z_min, z_max, Z_Bins
         
 
     def Energy_time_space(self, Spec_Res, E_Round, t_res, t_round, Find_Lineouts=True, lineout_height=0.2):
@@ -388,6 +398,11 @@ class PhaseSpace(ParticleEnergy):
 
 class BeamProjection():
 
+    """
+    TO DO:
+        - create option for the binning to cover the whole simulation window, not just around the beam limits.
+    """
+
     def __init__(self, a, b, w, r_unit = "micro"):
         self.a = a
         self.b = b
@@ -422,9 +437,9 @@ class BeamProjection():
         else:
 
             if equal_bins == True:
-                r_min, r_max, R_Bins = binning.get_bins_absolute([a_converted, b_converted], r_res, r_round)
+                r_min, r_max, R_Bins = binning.get_bins_absolute(np.concatenate((a_converted, b_converted)), r_res, r_round)
             else:
-                r_min, r_max, R_Bins = binning.get_bins([a_converted, b_converted], r_res, r_round)
+                r_min, r_max, R_Bins = binning.get_bins(np.concatenate((a_converted, b_converted)), r_res, r_round)
 
             projection, _, _ = np.histogram2d(a_converted, b_converted, bins=(R_Bins, R_Bins), weights=self.w )
 

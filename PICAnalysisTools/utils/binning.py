@@ -6,7 +6,7 @@ Authors: Lewis R Reid
 """
 
 import numpy as np
-from rounding import roundup, rounddn
+from PICAnalysisTools.utils.rounding import roundup, rounddn
 
 def get_bins(array, r_res, r_round):
     # array can be single arrary of numbers array = x or list of arrays array = [x, y, z]

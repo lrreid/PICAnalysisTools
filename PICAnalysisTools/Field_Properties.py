@@ -11,6 +11,12 @@ sophisticated I have in terms of options.
 TO DO:
     - Check that the functions I have here can provide the correct information for scripts like "PIC_View_save_Field_plasma_inc_beam_loop.py" which I use a lot.
     - Add a better way of finding laser centroid rather than highest intensity point.
+    - Add options for different normalisations of the z (propagation) axis. To laser centroid, plasma wavelength and edge of simulation box. Other options?
+    - Integrate options for changing units
+    - 
+
+    - Have another think about this. I don't think the current configuration will work for me. 
+    - Separate out plasma density from fields class.
     
 
 """

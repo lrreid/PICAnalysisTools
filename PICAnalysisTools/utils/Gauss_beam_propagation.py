@@ -53,3 +53,14 @@ def waist_from_focal_length(focal_length, lambda0, beam_radius, f_unit = "milli"
     zr = (pi*(w0**2))/lambda0_SI
 
     return magnitude_conversion(w0, "", spot_unit), magnitude_conversion(zr, "", rayleigh_unit)
+
+
+def focal_length_from_waist(lambda0, beam_radius, w0, wavelength_unit = "nano", beam_unit = "micro", spot_unit = "micro", f_unit = "milli"):
+
+    lambda0_SI     = magnitude_conversion(lambda0, wavelength_unit, "")
+    beam_radius_SI = magnitude_conversion(beam_radius, beam_unit, "")
+    w0_SI          = magnitude_conversion(w0, spot_unit, "")
+
+    focal_length = (pi*beam_radius_SI*w0_SI)/lambda0_SI
+
+    return magnitude_conversion(focal_length, "", f_unit)
