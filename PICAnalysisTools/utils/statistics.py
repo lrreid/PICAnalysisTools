@@ -18,11 +18,18 @@ def w_std( a, weights ):                                # Define weighted standa
 def D4S_centroid(image): # Find centroid of 2D array using D4-sigma method
     v, h = image.shape
 
-    p = np.sum(image)         # float avoids integer overflow
+    p = np.sum(image)                       # float avoids integer overflow
     # find the centroid
-    hh = np.arange(h, dtype=float)         # float avoids integer overflow
-    vv = np.arange(v, dtype=float)         # ditto
+    hh = np.arange(h, dtype=float)          # float avoids integer overflow
+    vv = np.arange(v, dtype=float)          # ditto
     xc = sum(np.dot(image, hh))/p
     yc = sum(np.dot(image.T, vv))/p
     
     return(xc, yc)
+
+
+def find_nearest(array, target):
+    # What does this function do if it finds two equally good candidates?
+    array = np.asarray(array)
+    idx = (np.abs(array - target)).argmin()
+    return idx, array[idx]

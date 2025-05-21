@@ -10,89 +10,87 @@ sophisticated I have in terms of options.
 
 TO DO:
     - Check that the functions I have here can provide the correct information for scripts like "PIC_View_save_Field_plasma_inc_beam_loop.py" which I use a lot.
-    - Add a better way of finding laser centroid rather than highest intensity point.
     - Add options for different normalisations of the z (propagation) axis. To laser centroid, plasma wavelength and edge of simulation box. Other options?
-    - Integrate options for changing units
-    - 
-
-    - Have another think about this. I don't think the current configuration will work for me. 
-    - Separate out plasma density from fields class.
-    
 
 """
 import numpy as np
-from scipy.constants import c, m_e, e, pi
-from scipy.signal import hilbert
-from PICAnalysisTools.utils.unit_conversions import magnitude_conversion
+from scipy.constants import c, e
+from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, magnitude_conversion_vol
+from PICAnalysisTools.utils.statistics import D4S_centroid, find_nearest
 
-class plasma_fields():
+class FieldProperites():
 
-    def __init__(self, ts):
-        self.ts = ts
+    def __init__(self, field, info_field, z_unit: str = "micro", r_unit: str = "micro"):
+        self.field      = field
+        self.info_field = info_field
+        self.z_unit     = z_unit
+        self.r_unit     = r_unit
 
 
-    def find_pixel_number(self, array, position, array_unit="", position_unit="micro"):
+    def find_pixel_number(self, array, position, position_unit: str = "micro"):
 
-        array_in_pos_units = magnitude_conversion(array, array_unit, position_unit)
-        pixel_no           = np.where( np.round(array_in_pos_units,2) == position )
+        position_SI = magnitude_conversion(position, position_unit, "")
+        # pixel_no    = np.where( np.round(array,2) == position_SI )
+        pixel_no, _ = find_nearest(array, position_SI)
 
         return pixel_no
 
-    def get_longitudinal_lineout(self, field, info_field, position, position_unit="micro"):
+    def get_longitudinal_lineout(self, position, position_unit: str = "micro"):
 
         if position == 0:
-            lineout  = field[int(len(info_field.r))//2,:]
+            lineout  = self.field[int(len(self.info_field.r))//2,:]
         else:
-            pixel_no = self.find_pixel_number(info_field.r, position, "", position_unit)
-            lineout  = field[pixel_no,:]
+            pixel_no = self.find_pixel_number(self.info_field.r, position, position_unit)
+            lineout  = self.field[pixel_no,:]
 
         return lineout
     
-    def get_transverse_lineout(self, field, info_field, position, position_unit="micro"):
+    def get_transverse_lineout(self, position, position_unit: str = "micro"):
         
-        pixel_no = self.find_pixel_number(info_field.z, position, "", position_unit)
-        lineout  = field[:,pixel_no]
+        pixel_no = self.find_pixel_number(self.info_field.z, position, position_unit)
+        lineout  = self.field[:,pixel_no]
 
         return lineout
+
+    def find_field_max(self, centroid_unit: str = "micro"):
+
+        peak          = np.where(self.field == np.max(abs(self.field)))
+        peak_z        = self.info_field.z[peak[1][0]]
+        peak_r        = self.info_field.r[peak[0][0]]
+
+        return magnitude_conversion(peak_z, "", centroid_unit), magnitude_conversion(peak_r, "", centroid_unit), peak[1][0], peak[0][0]
+    
+    def find_field_centroid(self, centroid_unit: str = "micro"):
+
+        centroid_z_px, centroid_r_px = D4S_centroid(abs(self.field))
+        centroid_z = self.info_field.z[centroid_z_px]
+        centroid_r = self.info_field.r[centroid_r_px]
+
+        return magnitude_conversion(centroid_z, "", centroid_unit), magnitude_conversion(centroid_r, "", centroid_unit), centroid_z_px, centroid_r_px
     
 
-    def get_a0_field(self, Snapshot, central_wavelength):
-        # This should be updated to get the central wavelength automatically from the laser diagnostics.
-        Ex, _    = self.ts.get_field( iteration=self.ts.iterations[Snapshot], field='E', m=1, coord='x')
-        a0_field = np.array((np.absolute(hilbert(np.array(Ex)))*e*central_wavelength)/(m_e*c*c*2*pi))    # Laser a0 field
-        a0_max   = np.max(a0_field)
 
-        return a0_field, a0_max
+class PlasmaField():
+
+    def __init__(self, ts, Species_name: str, den_unit: str = "centi"):
+        self.ts           = ts
+        self.Species_name = Species_name
+        self.den_unit     = den_unit
+
+
+    def get_plasma_density_map(self, Snapshot):
+
+        rho, info_rho = self.ts.get_field( iteration=self.ts.iterations[Snapshot], field='%s' % self.Species_name, m='all')
+        den           = np.abs( (-1/e)*rho )         # Plasma density (m^-3)
+
+        return magnitude_conversion_vol(den, "", self.den_unit, reciprocal_units = True), info_rho
     
 
-    def get_plasma_density(self, Snapshot, Species_name):
+def get_focusing_field_map(ts, Snapshot):
+    # get focusing field of plasma wave
 
-        rho, info_rho = self.ts.get_field( iteration=self.ts.iterations[Snapshot], field='%s' % Species_name, m='all')
-        den           = np.abs( ((-1/e)*1e-6)*rho )         # Plasma density (cm^-3)
+    Ex0, info_field = ts.get_field( iteration=ts.iterations[Snapshot], field='E', m=0, coord='x')                     # Extract Ex field of plasma wave
+    By, _           = ts.get_field( iteration=ts.iterations[Snapshot], field='B', m=0, coord='y')                     # Extract By field of plasma wave
+    focusing_field = -1*(Ex0-(c*By))
 
-        return den, info_rho    
-
-
-    def find_field_max(self, Snapshot, Field, M, Coord, centroid_unit="micro"):
-
-        field, info_field = self.ts.get_field( iteration=self.ts.iterations[Snapshot], field=Field, m=M, coord=Coord)
-        centroid          = np.where(field == np.max(abs(field)))
-        centroid_z        = info_field.z[centroid[1][0]]
-        centroid_r        = info_field.r[centroid[0][0]]
-
-        return magnitude_conversion(centroid_z, "", centroid_unit), magnitude_conversion(centroid_r, "", centroid_unit), centroid[1][0], centroid[0][0]
-    
-    def find_laser_centroid(self, Snapshot, centroid_unit="micro"):
-
-        centroid_z, centroid_r, centroid_z_px, centroid_r_px = self.find_field_max(self, Snapshot, Field='E', M=1, Coord='x', centroid_unit=centroid_unit)
-
-        return centroid_z, centroid_r, centroid_z_px, centroid_r_px
-    
-    def get_focusing_field(self, Snapshot):
-        # get focusing field of plasma wave
-
-        Ex0, _   = self.ts.get_field( iteration=self.ts.iterations[Snapshot], field='E', m=0, coord='x')                     # Extract Ex field of plasma wave
-        By, _    = self.ts.get_field( iteration=self.ts.iterations[Snapshot], field='B', m=0, coord='y')                     # Extract By field of plasma wave
-        focusing_field = -1*(Ex0-(c*By))
-
-        return focusing_field
+    return focusing_field, info_field

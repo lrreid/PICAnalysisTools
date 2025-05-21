@@ -8,6 +8,7 @@ Authors: Lewis R Reid
 TO DO:
     - Take lineouts of histograms (summed and line) should be their own function/class
     - Shift x, z, time axis to centre of beam should be its own function
+    - Add type hints to functions int, float, bool, str
 
 """
 
@@ -18,26 +19,26 @@ from PICAnalysisTools.utils import binning, statistics, rounding
 
 
 class ParticleEnergy():
-    # you should put types in here :  eg ux: float
-    def __init__(self, ux, uy, uz, q, w, energy_unit : str = "mega", charge_unit : str = "pico"):
+    # you should put types in here:  eg ux: float
+    def __init__(self, ux, uy, uz, q, w, energy_unit: str = "mega", charge_unit: str = "pico"):
         """
         Parameters
         ----------
-        ux : float
+        ux: float
             Particle momenta in x.
-        uy : float
+        uy: float
             Particle momenta in y.
-        uz : float
+        uz: float
             Particle momenta in z.
-        q : float
+        q: float
             particle charge (C).
-        w : float
+        w: float
             particle weights.
-        energy_unit : string
+        energy_unit: string
             Order of magnitude of particle energy units
-        charge_unit : string
+        charge_unit: string
             Order of magnitude of particle charge units
-        Ek : float
+        Ek: float
             Energy of each macroparticle (default: MeV)
 
         Returns
@@ -61,7 +62,7 @@ class ParticleEnergy():
         """
         Returns
         -------
-        Ek_converted : float
+        Ek_converted: float
             Energy of each beam macroparticles (MeV).
         """
         
@@ -75,7 +76,7 @@ class ParticleEnergy():
         """
         Returns
         -------
-        charge : float
+        charge: float
             Total beam charge (C).
         """
 
@@ -88,24 +89,24 @@ class ParticleEnergy():
         """
         Parameters
         ----------
-        Spec_Res : float
+        Spec_Res: float
             Resolution of histogram.
-        E_Round : float
+        E_Round: float
             Rounding value for max/min energy.
 
         Returns
         -------
-        e_spec : tuple
+        e_spec: tuple
             Particle species energy spectra [0] - number of electrons. [1] - particle energy.
-        Spec_Min : int
+        Spec_Min: int
             Minimumum energy of histogram.
-        Spec_Max : int
+        Spec_Max: int
             Maximum energy of histogram.
-        E_Bins : TYPE
+        E_Bins: TYPE
             Energy bins of histogram.
         """
 
-        ## TO THINK : 
+        ## TO THINK: 
         """
         If the energy spec is NOT a partical energy property - use a separate class eg:
         class energy_spec:
@@ -133,11 +134,11 @@ class ParticleEnergy():
         """
         Returns
         -------
-        Ek_mean : float
+        Ek_mean: float
             Average particle energy (MeV).
-        de_rms : float
+        de_rms: float
             RMS energy spread from statistical calculation (MeV).
-        PC_spread : float
+        PC_spread: float
             Percentage RMS energy spread.
         """
 
@@ -149,21 +150,21 @@ class ParticleEnergy():
 
 class ParticleTransverseProperties:
 
-    def __init__(self, r, ur, z, uz, w, r_unit : str = "micro", div_unit : str = "milli", emit_unit : str = "micro"):
+    def __init__(self, r, ur, z, uz, w, r_unit: str = "micro", div_unit: str = "milli", emit_unit: str = "micro"):
         """
         Parameters
         ----------
-        r : float
+        r: float
             Particle positions (m).
-        ur : float
+        ur: float
             Particle momenta.
-        z : float
+        z: float
             Particle positions in z axis (m).
-        uz : float
+        uz: float
             Particle momenta in z axis.
-        w : float
+        w: float
             particle weights.
-        r_unit : string
+        r_unit: string
             order of magnitude to return values.
 
         Returns
@@ -217,24 +218,24 @@ class ParticleTransverseProperties:
 
 class PhaseSpace(ParticleEnergy):
     
-    def __init__(self, x, y, z, ux, uy, uz, w, r_unit = "micro", energy_unit= "mega", div_unit= "milli", time_unit= "femto"):
+    def __init__(self, x, y, z, ux, uy, uz, w, r_unit: str = "micro", energy_unit: str = "mega", div_unit: str = "milli", time_unit: str = "femto"):
         #super().__init__(self)
         """
         Parameters
         ----------
-        x : float
+        x: float
             Particle positions in x (m).
-        y : float
+        y: float
             Particle positions in y (m).
-        z : float
+        z: float
             Particle positions in z (m).
-        ux : float
+        ux: float
             Particle momenta in x.
-        uy : float
+        uy: float
             Particle momenta in y.
-        uz : float
+        uz: float
             Particle momenta in z.
-        w : float
+        w: float
             particle weights.
         Ek: float
             Energy of each macroparticle (default: MeV)
@@ -262,7 +263,7 @@ class PhaseSpace(ParticleEnergy):
         """
         Returns
         -------
-        Ek_converted : float
+        Ek_converted: float
             Energy of each beam macroparticles (default: MeV).
         """
         
@@ -284,7 +285,7 @@ class PhaseSpace(ParticleEnergy):
 
         return magnitude_conversion(Div_r, "", self.div_unit)
 
-    def Energy_z_space(self, z_res, z_round, Spec_Res, E_Round, Centre_z=True, Find_Lineouts=True, lineout_height=0.2):
+    def Energy_z_space(self, z_res, z_round, Spec_Res, E_Round, Centre_z: bool = True, Find_Lineouts: bool = True, lineout_height=0.2):
 
         Spec_Min, Spec_Max, E_Bins = binning.get_bins(self.Ek, Spec_Res, E_Round)
 
@@ -325,7 +326,7 @@ class PhaseSpace(ParticleEnergy):
             return E_Phase, Order, Spec_Min, Spec_Max, E_Bins, z_min, z_max, Z_Bins
         
 
-    def Energy_time_space(self, Spec_Res, E_Round, t_res, t_round, Find_Lineouts=True, lineout_height=0.2):
+    def Energy_time_space(self, Spec_Res, E_Round, t_res, t_round, Find_Lineouts: bool = True, lineout_height=0.2):
 
         # Need to add option to make the centre of the beam t = 0. Is it there already and always on as default?
 
@@ -361,7 +362,7 @@ class PhaseSpace(ParticleEnergy):
             return long_Phase, Order, Spec_Min, Spec_Max, E_Bins, t_min, t_max, T_Bins
 
 
-    def Div_r_space(self, Coord, r_res, r_round, div_round, div_res, Find_Lineouts=True, lineout_height=0.2):
+    def Div_r_space(self, Coord, r_res, r_round, div_round, div_res, Find_Lineouts: bool = True, lineout_height=0.2):
 
         if Coord == "x":
             Div_r = self.div_x
