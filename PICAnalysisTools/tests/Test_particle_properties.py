@@ -30,7 +30,7 @@ Species = "beam"
 FilePath, SimPath = set_sim_path(FolderPath, Simulation, boosted_frame=False)
 
 ts   = OpenPMDTimeSeries(FilePath)
-K    = 12                                       # snapshot to analyse
+K    = 0                                       # snapshot to analyse
 ctau = round(ts.t[K]*c*1e3,2)
 
 x, y, z, ux, uy, uz, q, w = ts.get_particle( ['x', 'y', 'z', 'ux', 'uy', 'uz', 'charge', 'w'], species=Species, iteration=ts.iterations[K], plot=False)
@@ -66,28 +66,23 @@ plt.show()
 TX = ParticleTransverseProperties(x, ux, z, uz, w, r_unit = "micro", div_unit = "milli", emit_unit = "micro")
 TY = ParticleTransverseProperties(y, uy, z, uz, w, r_unit = "micro", div_unit = "milli", emit_unit = "micro")
 
-div_x, eta_tr_norm_x, beam_x, Twiss_alpha_x, Twiss_beta_x, Twiss_gamma_x = TX.transverse_beam_properties()
-div_y, eta_tr_norm_y, beam_y, Twiss_alpha_y, Twiss_beta_y, Twiss_gamma_y = TY.transverse_beam_properties()
-beam_z = TX.beam_length()
-
-
 print("\n")
 print("Beam properties in x")
-print("Divergence: %0.2f mrad" % round(div_x,2) )
-print("Normalised emittance: %0.2f mm mrad" % round(eta_tr_norm_x,2) )
-print("Beam size: %0.2f um" % round(beam_x,2) )
-print("Twiss alpha: %0.2f" % round(Twiss_alpha_x,2) )
-print("Twiss beta: %0.2f m" % round(Twiss_beta_x,2) )
-print("Twiss gamma: %0.2f m^-1" % round(Twiss_gamma_x,2) )
+print("Beam size: %0.2f um" % round(TX.beam_r,2) )
+print("Divergence: %0.2f mrad" % round(TX.div_r,2) )
+print("Normalised emittance: %0.2f mm mrad" % round(TX.eta_tr_norm_r,2) )
+print("Twiss alpha: %0.2f" % round(TX.Twiss_alpha,2) )
+print("Twiss beta: %0.2f m" % round(TX.Twiss_beta,2) )
+print("Twiss gamma: %0.2f m^-1" % round(TX.Twiss_gamma,2) )
 
 print("\n")
 print("Beam properties in y")
-print("Divergence: %0.2f mrad" % round(div_y,2) )
-print("Normalised emittance: %0.2f mm mrad" % round(eta_tr_norm_y,2) )
-print("Beam size: %0.2f um" % round(beam_y,2) )
-print("Twiss alpha: %0.2f" % round(Twiss_alpha_y,2) )
-print("Twiss beta: %0.2f m" % round(Twiss_beta_y,2) )
-print("Twiss gamma: %0.2f m^-1" % round(Twiss_gamma_y,2) )
+print("Beam size: %0.2f um" % round(TY.beam_r,2) )
+print("Divergence: %0.2f mrad" % round(TY.div_r,2) )
+print("Normalised emittance: %0.2f mm mrad" % round(TY.eta_tr_norm_r,2) )
+print("Twiss alpha: %0.2f" % round(TY.Twiss_alpha,2) )
+print("Twiss beta: %0.2f m" % round(TY.Twiss_beta,2) )
+print("Twiss gamma: %0.2f m^-1" % round(TY.Twiss_gamma,2) )
 
 print("\n")
-print("Beam length: %0.2f um" % round(beam_z,2) )
+print("Beam length: %0.2f um" % round(TX.beam_z,2) )

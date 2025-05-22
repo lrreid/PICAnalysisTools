@@ -179,14 +179,8 @@ class ParticleTransverseProperties:
         self.r_unit    = r_unit
         self.div_unit  = div_unit
         self.emit_unit = emit_unit
-        
-
-    def beam_size(self):
-        r_mean        = np.average( self.r, weights=self.w)
-        r2_mean       = np.average( ((self.r-r_mean)**2), weights=self.w)
-        beam_r        = (np.sqrt( np.abs(r2_mean)))         # beam size (m)
-
-        return magnitude_conversion(beam_r, "", self.r_unit)
+        self.beam_r, self.div_r, self.eta_tr_norm_r, self.Twiss_alpha, self.Twiss_beta, self.Twiss_gamma = self.transverse_beam_properties()
+        self.beam_z    = self.beam_length()
     
     def beam_length(self):
         z_mean        = np.average( self.z, weights=self.w)
@@ -201,25 +195,25 @@ class ParticleTransverseProperties:
 
         r_mean        = np.average( self.r, weights=self.w)
         r2_mean       = np.average( ((self.r-r_mean)**2), weights=self.w)
+        beam_r        = (np.sqrt( np.abs(r2_mean)))         # beam size (m)
+
         rPrime2_mean  = np.average( (r_prime**2), weights=self.w)
         rrPrime_mean  = np.average( (self.r*r_prime), weights=self.w)
         rrPrime_mean2 = (np.average( ((self.r-r_mean)*r_prime), weights=self.w))**2
         eta_tr_r      = np.sqrt( (r2_mean*rPrime2_mean)  -  rrPrime_mean2 )
         eta_tr_norm_r = (np.average( self.uz, weights=self.w))  * eta_tr_r
-        beam_r        = (np.sqrt( np.abs(r2_mean)))         # beam size (m)
         eta_tr        = np.sqrt( (r2_mean*rPrime2_mean)  -  rrPrime_mean2 )
 
         Twiss_alpha = -1*(rrPrime_mean/eta_tr)
         Twiss_beta  = r2_mean/eta_tr
         Twiss_gamma = rPrime2_mean/eta_tr
 
-        return magnitude_conversion(div_r, "", self.div_unit), magnitude_conversion(eta_tr_norm_r, "", self.emit_unit), magnitude_conversion(beam_r, "", self.r_unit), Twiss_alpha, Twiss_beta, Twiss_gamma
-    
+        return magnitude_conversion(beam_r, "", self.r_unit), magnitude_conversion(div_r, "", self.div_unit), magnitude_conversion(eta_tr_norm_r, "", self.emit_unit), Twiss_alpha, Twiss_beta, Twiss_gamma
 
-class PhaseSpace(ParticleEnergy):
+
+class PhaseSpace():
     
     def __init__(self, x, y, z, ux, uy, uz, w, r_unit: str = "micro", energy_unit: str = "mega", div_unit: str = "milli", time_unit: str = "femto"):
-        #super().__init__(self)
         """
         Parameters
         ----------
@@ -369,7 +363,7 @@ class PhaseSpace(ParticleEnergy):
             Div_r = self.div_y
             r     = magnitude_conversion(self.y, "", self.r_unit)
         else:
-            print("Axis incorrectly defined. Choose x ot y. x chosen as default.")
+            print("Axis incorrectly defined. Choose x or y. x chosen as default.")
             Div_r = self.div_x
             r     = magnitude_conversion(self.x, "", self.r_unit)
            
