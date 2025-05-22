@@ -30,7 +30,6 @@ class FieldProperites():
     def find_pixel_number(self, array, position, position_unit: str = "micro"):
 
         position_SI = magnitude_conversion(position, position_unit, "")
-        # pixel_no    = np.where( np.round(array,2) == position_SI )
         pixel_no, _ = find_nearest(array, position_SI)
 
         return pixel_no
@@ -52,9 +51,13 @@ class FieldProperites():
 
         return lineout
 
-    def find_field_max(self, centroid_unit: str = "micro"):
+    def find_field_max(self, use_absolute: bool = False, centroid_unit: str = "micro"):
 
-        peak          = np.where(self.field == np.max(abs(self.field)))
+        if use_absolute is True:
+            peak          = np.where(abs(self.field) == np.max(abs(self.field)))
+        else:
+            peak          = np.where(self.field == np.max(self.field))
+
         peak_z        = self.info_field.z[peak[1][0]]
         peak_r        = self.info_field.r[peak[0][0]]
 
@@ -62,7 +65,7 @@ class FieldProperites():
     
     def find_field_centroid(self, centroid_unit: str = "micro"):
 
-        centroid_z_px, centroid_r_px = D4S_centroid(abs(self.field))
+        centroid_z_px, centroid_r_px = D4S_centroid(abs(self.field), rtn_int = True)
         centroid_z = self.info_field.z[centroid_z_px]
         centroid_r = self.info_field.r[centroid_r_px]
 

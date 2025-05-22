@@ -294,7 +294,6 @@ class PhaseSpace(ParticleEnergy):
         z_min, z_max, Z_Bins = binning.get_bins(z_converted, z_res, z_round)
 
         E_Phase, _, _ = np.histogram2d(self.Ek, z_converted, bins=(E_Bins, Z_Bins), weights=self.w )
-        Order         = np.floor(np.log10(np.max(E_Phase)))
 
         if Centre_z is True:
             # Set the centre of the beam to r = 0
@@ -320,10 +319,10 @@ class PhaseSpace(ParticleEnergy):
             Z_line  = Z_Bins - z_at_max                                                 # Set centre of beam to z = 0
             Col_sum = (Ene_height * rounding.normalise(np.sum(E_Phase, axis=0))) + Spec_Min
 
-            return E_Phase, Order, Spec_Min, Spec_Max, E_Bins, z_min, z_max, Z_Bins, Row_sum, Z_line, Col_sum
+            return E_Phase, Spec_Min, Spec_Max, E_Bins, z_min, z_max, Z_Bins, Row_sum, Z_line, Col_sum
 
         else:
-            return E_Phase, Order, Spec_Min, Spec_Max, E_Bins, z_min, z_max, Z_Bins
+            return E_Phase, Spec_Min, Spec_Max, E_Bins, z_min, z_max, Z_Bins
         
 
     def Energy_time_space(self, Spec_Res, E_Round, t_res, t_round, Find_Lineouts: bool = True, lineout_height=0.2):
@@ -335,7 +334,6 @@ class PhaseSpace(ParticleEnergy):
         Spec_Min, Spec_Max, E_Bins = binning.get_bins(self.Ek, Spec_Res, E_Round)
 
         long_Phase, _, _ = np.histogram2d(self.Ek, time_data, bins=(E_Bins, T_Bins), weights=self.w )
-        Order            = np.floor(np.log10(np.max(long_Phase)))
 
         # Set the centre of the beam to r = 0
         # Particularly useful if plotting z axis.
@@ -356,10 +354,10 @@ class PhaseSpace(ParticleEnergy):
             T_line  = T_Bins - t_at_max                                                 # Set centre of beam to z = 0
             Col_sum = (Ene_height * rounding.normalise(np.sum(long_Phase, axis=0))) + Spec_Min
 
-            return long_Phase, Order, Spec_Min, Spec_Max, E_Bins, t_min, t_max, T_Bins, Row_sum, T_line, Col_sum
+            return long_Phase, Spec_Min, Spec_Max, E_Bins, t_min, t_max, T_Bins, Row_sum, T_line, Col_sum
         
         else:
-            return long_Phase, Order, Spec_Min, Spec_Max, E_Bins, t_min, t_max, T_Bins
+            return long_Phase, Spec_Min, Spec_Max, E_Bins, t_min, t_max, T_Bins
 
 
     def Div_r_space(self, Coord, r_res, r_round, div_round, div_res, Find_Lineouts: bool = True, lineout_height=0.2):
@@ -379,7 +377,6 @@ class PhaseSpace(ParticleEnergy):
         R_min, R_max, R_Bins = binning.get_bins_absolute(r, r_res, r_round)
 
         Trans_phase, _, _ = np.histogram2d(Div_r, r, bins=(D_Bins, R_Bins), weights=self.w )
-        Order_Trans       = np.floor(np.log10(np.amax(Trans_phase)))
 
         if Find_Lineouts is True:
             # Lineout plots are: plt.plot(Row_sum_Trans, D_Bins[:-1]) and plt.plot(R_line, col_sum_Trans)
@@ -391,10 +388,10 @@ class PhaseSpace(ParticleEnergy):
             R_line        = R_Bins[:-1]
             col_sum_Trans = (X_height * rounding.normalise(np.sum(Trans_phase, axis=0))) + (-1*max_div)
 
-            return Trans_phase, Order_Trans, max_div, D_Bins, R_min, R_max, R_Bins, Row_sum_Trans, R_line, col_sum_Trans
+            return Trans_phase, max_div, D_Bins, R_min, R_max, R_Bins, Row_sum_Trans, R_line, col_sum_Trans
         
         else:
-            return Trans_phase, Order_Trans, max_div, D_Bins, R_min, R_max, R_Bins
+            return Trans_phase, max_div, D_Bins, R_min, R_max, R_Bins
 
 
 class BeamProjection():

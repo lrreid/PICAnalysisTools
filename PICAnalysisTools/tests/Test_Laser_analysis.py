@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 """
-Created on Fri Jan 12 13:44:01 2024
+Test that LaserProperties class functions as intended.
 
-@author: ryi76833
-
+To use, you must set your own FolderPath and Simulation to simulaton data which includes a laser pulse.
 """
 
 import numpy as np

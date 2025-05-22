@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
 """
-Created on Mon Jan  8 14:25:55 2024
+Test that ParticleEnergy and ParticleTransverseProperties classes functions as intended.
 
-@author: ryi76833
-
-Test object orientated version of PIC viewer
-
+To use, you must set your own FolderPath, Simulation and Species to simulaton data which includes a particle species.
 
 TO DO:
     - Add plotting for phase space. Make sure these functions work. 

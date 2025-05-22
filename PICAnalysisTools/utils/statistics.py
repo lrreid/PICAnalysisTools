@@ -15,7 +15,7 @@ def w_std( a, weights ):                                # Define weighted standa
     return( average, np.sqrt(variance) )
 
 
-def D4S_centroid(image): # Find centroid of 2D array using D4-sigma method
+def D4S_centroid(image, rtn_int = False): # Find centroid of 2D array using D4-sigma method
     v, h = image.shape
 
     p = np.sum(image)                       # float avoids integer overflow
@@ -25,7 +25,10 @@ def D4S_centroid(image): # Find centroid of 2D array using D4-sigma method
     xc = sum(np.dot(image, hh))/p
     yc = sum(np.dot(image.T, vv))/p
     
-    return(xc, yc)
+    if rtn_int is True:
+        return int(np.round(xc,0)), int(np.round(yc,0))
+    else:
+        return xc, yc
 
 
 def find_nearest(array, target):
