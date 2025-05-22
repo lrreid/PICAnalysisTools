@@ -27,9 +27,9 @@ def resonant_ne(condition, sigmaZ, sigma_unit : str ="micro", den_unit : str = "
     sigmaZ_SI = magnitude_conversion(sigmaZ, sigma_unit, "" )
 
     if condition == "sqrt(2)":
-        n_e = 2e-6*epsilon_0*m_e*(c/(sigmaZ_SI*e))**2
+        n_e = 2*epsilon_0*m_e*(c/(sigmaZ_SI*e))**2
     elif condition == "pi/4":
-        n_e = 1e-6*epsilon_0*m_e*((c*pi)/(4*sigmaZ_SI*e))**2    
+        n_e = epsilon_0*m_e*((c*pi)/(4*sigmaZ_SI*e))**2    
     else:
         n_e = 0
         print("Resonance condition incorrectly defined!")
