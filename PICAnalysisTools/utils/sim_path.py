@@ -16,8 +16,8 @@ def set_sim_path(FolderPath, Simulation, boosted_frame=False):
 
     SimPath = join(FolderPath, Simulation)
    
-    # FilePath = FilePath.replace('//', '/')      # Remove unceccessary Windows style double slashes
-    # SimPath  = SimPath.replace('//', '/')       # Remove unceccessary Windows style double slashes
+    FilePath = FilePath.replace('//', '/')      # Remove unceccessary Windows style double slashes
+    SimPath  = SimPath.replace('//', '/')       # Remove unceccessary Windows style double slashes
 
     return FilePath, SimPath
 

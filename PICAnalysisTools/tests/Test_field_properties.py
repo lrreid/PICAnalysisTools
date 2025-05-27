@@ -33,7 +33,8 @@ show_beam           = True
 plasma_species = "rho_plasma_elec"
 beam_species   = 'electrons'
 
-FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools\PICAnalysisTools'
+FolderPath = r'/home/lewis'
+# FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools\PICAnalysisTools'
 Simulation = 'example_data'
 Ana_name   = 'field_plotting_tests'
 FilePath, SimPath = set_sim_path(FolderPath, Simulation, boosted_frame=False)

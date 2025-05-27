@@ -13,7 +13,8 @@ fsize = 12
 
 #%% Read data from files
 
-FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools'
+FolderPath = r'/home/lewis'
+# FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools'
 Simulation = 'example_data'
 FilePath, SimPath   = set_sim_path(FolderPath, Simulation, boosted_frame=False)
 
