@@ -1,12 +1,9 @@
 """
 This file contains functions for collecting together analysis of laser pulse properties
 
-
-Date created: 05/01/2024 @ 16:11
 Authors: Lewis R Reid
 
 This is only compatible with OpenPMD viewer version 1.9.0 or greater.
-
 
 TO DO:
     - 
@@ -147,7 +144,7 @@ def get_central_wavelength(ts, snapshot, m: str = 'all', coord: str = 'x', wavel
     average, width      = w_std(wavelength, spectrum)
     peak                = wavelength[np.where(spectrum == np.max(spectrum))[0][0]]
 
-    return magnitude_conversion(average, "", wavelength_unit), magnitude_conversion(width, "", wavelength_unit), magnitude_conversion(peak, "", wavelength_unit)
+    return average, width, peak
 
 
 def get_laser_cenroid(ts, snapshot, centroid_unit: str = "micro"):

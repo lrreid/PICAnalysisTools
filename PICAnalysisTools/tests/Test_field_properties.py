@@ -14,23 +14,32 @@ import matplotlib.pyplot as plt
 from openpmd_viewer import OpenPMDTimeSeries
 from PICAnalysisTools.Field_Properties import FieldProperites, PlasmaField
 from PICAnalysisTools.Laser_Properties import get_laser_cenroid
-from PICAnalysisTools.utils.sim_path import set_sim_path, set_Analysis_path
+from PICAnalysisTools.Particle_Properties import BeamProjection
+from PICAnalysisTools.utils.sim_path import set_sim_path, set_analysis_path
 from PICAnalysisTools.Laser_Properties import get_a0_field_map
 from PICAnalysisTools.utils.plot_limits import plt_limits_log, plt_limits_log_absolute
+from PICAnalysisTools.utils.white_background_colormap import cmap_white
+from PICAnalysisTools.utils.plot_limits import roundup
+from PICAnalysisTools.utils.unit_conversions import magnitude_conversion
+
 fsize = 12
 
 #%% Read data from files
 
-Save_Plots = False
+Save_Plots          = False
 show_laser_countour = True
+show_beam           = True
 
-FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\fbpic\20230623_LWFA_Example'
-Simulation = '20241104_a0_2_25fs_1E18_10um'
-Ana_name   = 'fields'
-FilePath, SimPath   = set_sim_path(FolderPath, Simulation, boosted_frame=False)
+plasma_species = "rho_plasma_elec"
+beam_species   = 'electrons'
+
+FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools\PICAnalysisTools'
+Simulation = 'example_data'
+Ana_name   = 'field_plotting_tests'
+FilePath, SimPath = set_sim_path(FolderPath, Simulation, boosted_frame=False)
 
 if Save_Plots is True:
-    Ana_dir = set_Analysis_path(FolderPath, Simulation, Ana_name)
+    Ana_dir = set_analysis_path(SimPath, Ana_name)
     DPI = 300
 else:
     DPI = 150
@@ -39,15 +48,22 @@ ts = OpenPMDTimeSeries(FilePath, check_all_files=False, backend='h5py')
 
 #%% Extract data from file
 
-K = 8
+K = 2
 
 Ex, info_Ex   = ts.get_field( iteration=ts.iterations[K], field = 'E', m=1, coord = 'x')
-den, info_den = PlasmaField(ts, Species_name = "rho", den_unit = "centi").get_plasma_density_map(K)
+den, info_den = PlasmaField(ts, Species_name = plasma_species, den_unit = "centi").get_plasma_density_map(K)
 
 ctau = np.round(ts.t[K]*c*1e6,0)
 
 if show_laser_countour is True:
     a0_field, a0_max = get_a0_field_map(ts, K)
+
+if show_beam is True:
+
+    window_limits = magnitude_conversion(np.array([info_Ex.rmin, info_Ex.rmax, info_Ex.zmin, info_Ex.zmax]), "", "micro")
+    x, y, z, w    = ts.get_particle( ['x', 'y', 'z', 'w'], species=beam_species, iteration=ts.iterations[K], plot=False)
+    beam_dist     = BeamProjection(x, z, w).beam_projection_fixed_window(window_extent = window_limits, r_res=0.2)
+
 
 #%% Take lineouts of field and plot the data
 
@@ -71,12 +87,12 @@ plt.plot(peak_z, peak_r, '+', color='blue', markersize=4, label="peak")
 plt.colorbar().set_label(label=('E$_{x}$ ($Vm^{-1}$)'), size=fsize)
 plt.clim(-Ex_plt_max, Ex_plt_max)
 plt.axis(np.round(info_Ex.imshow_extent*1e6,0))
-ax.set_title("$E_{x} field$\nc$\\tau$ = %d $\\mu$m" % ctau, fontsize=fsize)
+ax.set_title("Laser $E_{x} field$\nc$\\tau$ = %d $\\mu$m" % ctau, fontsize=fsize)
 ax.set_xlabel('z ($\\mu$m)', fontsize=fsize)
 ax.set_ylabel('r ($\\mu$m)', fontsize=fsize)
 plt.legend(loc='lower left', prop={'size': 10})
 
-if Save_Plots == True:
+if Save_Plots is True:
     plt.savefig("%s/Ex_Field_ctau_%dum.png" % (Ana_dir, ctau),dpi=DPI,format="png")
     plt.close()
 else:
@@ -93,7 +109,7 @@ ax.set_xlabel('z ($\\mu$m)', fontsize=fsize)
 ax.set_ylabel('E$_{x}$ ($Vm^{-1}$)', fontsize=fsize)
 plt.grid(True)
 # plt.legend(loc='lower left', prop={'size': 10})
-if Save_Plots == True:
+if Save_Plots is True:
     plt.savefig("%s/Longitudinal_lineout_ctau_%dum.png" % (Ana_dir, ctau), dpi=DPI, format="png")
     plt.close()
 else:
@@ -111,7 +127,7 @@ ax.set_xlabel('z ($\\mu$m)', fontsize=fsize)
 ax.set_ylabel('E$_{x}$ ($Vm^{-1}$)', fontsize=fsize)
 plt.grid(True)
 # plt.legend(loc='lower left', prop={'size': 10})s
-if Save_Plots == True:
+if Save_Plots is True:
     plt.savefig("%s/Transverse_lineout_ctau_%dum.png" % (Ana_dir, ctau), dpi=DPI, format="png")
     plt.close()
 else:
@@ -120,9 +136,9 @@ else:
 #%% Plot plasma density
 
 fig, ax = plt.subplots(dpi=150)
-plt.imshow(den,cmap=plt.cm.viridis_r, extent=(np.round(info_den.imshow_extent*1e6,0)), aspect='auto') #, norm=LogNorm())
-plt.colorbar().set_label(label='$n_{e}$ (cm$^{-3}$)',size=fsize)
-plt.clim(0, 5e18)
+plt.imshow(den, cmap=plt.cm.viridis_r, extent=(np.round(info_den.imshow_extent*1e6,0)), aspect='auto') #, norm=LogNorm())
+plt.colorbar().set_label(label='$n_{e}$ (cm$^{-3}$)', size=fsize)
+plt.clim(0, 3e19)
 plt.axis(np.round(info_den.imshow_extent*1e6,0))          # set axes [xmin, xmax, ymin, ymax]
 ax.set_title("c$\\tau$ = %d $\\mu$m" % ctau, fontsize=fsize)
 ax.set_xlabel('z ($\\mu$m)', fontsize=fsize)
@@ -133,12 +149,14 @@ if show_laser_countour is True:
     CS = ax.contour(np.array(info_den.z)*1e6, np.array(info_den.r)*1e6, a0_field, [0.135*a0_max, 0.2*a0_max, 0.4*a0_max, 0.6*a0_max, 0.8*a0_max, 0.98*a0_max], cmap='cool')
     ax.clabel(CS, inline=0, fontsize=0)
 
+if show_beam is True:
+    beam_proj = plt.imshow(beam_dist[0], cmap=cmap_white(plt.cm.plasma), extent=(np.round(info_den.imshow_extent*1e6,0)), aspect='auto')
+    beam_proj.set_clim(0, roundup(0.80*np.max(beam_dist[0]), 1))
+
 fig.tight_layout()
 
-if Save_Plots == True:
+if Save_Plots is True:
     plt.savefig("%s/Plasma_density_ctau_%dum.png" % (Ana_dir, ctau), dpi=DPI, format="png")
     plt.close()
 else:
     plt.show()
-
-

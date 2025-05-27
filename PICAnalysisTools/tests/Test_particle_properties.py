@@ -9,11 +9,10 @@ TO DO:
 """
 
 import matplotlib.pyplot as plt
-from scipy.constants import c
+from scipy.constants import c, e, m_e
 from openpmd_viewer import OpenPMDTimeSeries        # This should be used for pmd viewer version 1.x.
 from PICAnalysisTools.Particle_Properties import ParticleEnergy, ParticleTransverseProperties
 from PICAnalysisTools.utils.sim_path import set_sim_path
-# from PICAnalysisTools.utils.rounding import roundup
 from PICAnalysisTools.utils.plot_limits import plt_limits_log
 
 # from matplotlib import use
@@ -23,17 +22,23 @@ fsize = 12
 
 #%% Read data from files
 
-FolderPath = r'D:\Lewis\fbpic\20250501_pwfa_at_CLARA'
-Simulation = '20250501_sigz_2p2um_sigr_5um_kpLrms_pi4'
-Species = "beam"
+FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools\PICAnalysisTools'
+Simulation = 'example_data'
+Species    = "electrons"
 
 FilePath, SimPath = set_sim_path(FolderPath, Simulation, boosted_frame=False)
 
 ts   = OpenPMDTimeSeries(FilePath)
-K    = 0                                       # snapshot to analyse
+K    = 2                                       # snapshot to analyse
 ctau = round(ts.t[K]*c*1e3,2)
 
-x, y, z, ux, uy, uz, q, w = ts.get_particle( ['x', 'y', 'z', 'ux', 'uy', 'uz', 'charge', 'w'], species=Species, iteration=ts.iterations[K], plot=False)
+
+elec_rest_mass     = (m_e*c**2)/e                   # Electron rest mass (eV)
+bunch_thresh       = 600e6                            # Threshold for including electrons in particle diagnostic (eV)
+bunch_thresh_norm  = bunch_thresh/elec_rest_mass    # Threshold for including electrons in particle diagnostic (normalised units)
+
+x, y, z, ux, uy, uz, q, w = ts.get_particle( ['x', 'y', 'z', 'ux', 'uy', 'uz', 'charge', 'w'], species=Species,
+                                            iteration=ts.iterations[K], plot=False, select = {'uz':[bunch_thresh_norm, None] } )
 
 PE = ParticleEnergy(ux, uy, uz, q, w, energy_unit = "Mega", charge_unit = "pico") # Create instance of class
 

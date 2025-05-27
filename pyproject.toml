@@ -11,7 +11,7 @@ description = "Python package with tools to extract data from PIC simulations us
 license = {text = "BSD-3-Clause"}
 
 keywords = []
-dependencies = ["numpy", "scipy", "matplotlib", "openpmd_viewer >= 1.9", "openpmd-api"]
+dependencies = ["numpy", "scipy", "matplotlib", "openpmd_viewer >= 1.9"]
 classifiers = []
 dynamic = ["version"]
 

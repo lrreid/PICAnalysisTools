@@ -5,6 +5,7 @@ __pycache__
 # Local folders
 *.egg-info
 \build
+\example_data
 
 # Other
 *.pdf

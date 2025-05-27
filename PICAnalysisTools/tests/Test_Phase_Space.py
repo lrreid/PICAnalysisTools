@@ -10,16 +10,17 @@ TO DO:
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.constants import c
+from scipy.constants import c, e, m_e
 from openpmd_viewer import OpenPMDTimeSeries        # This should be used for pmd viewer version 1.x.
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import FormatStrFormatter
 
 from PICAnalysisTools.utils.white_background_colormap import cmap_white
 from PICAnalysisTools.Particle_Properties import PhaseSpace, BeamProjection
-# from PICAnalysisTools.utils.particle_selection import radial_selection
+from PICAnalysisTools.utils.particle_selection import radial_selection
 from PICAnalysisTools.utils.sim_path import set_sim_path
 from PICAnalysisTools.utils.plot_limits import plt_limits_log
+from PICAnalysisTools.utils.unit_conversions import magnitude_conversion
 
 # from matplotlib import use
 # use("Agg")                  # "Agg" makes it possible to save plots without a display attached. Useful for analysis on remote computing cluster.
@@ -28,23 +29,27 @@ fsize = 12
 
 #%% Read data from files
 
-FolderPath = r'D:\Lewis\fbpic\20250501_pwfa_at_CLARA'
-Simulation = '20250501_sigz_2p2um_sigr_5um_kpLrms_pi4'
-Species    = "beam"
+FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools\PICAnalysisTools'
+Simulation = 'example_data'
+Species    = "electrons"
 
 FilePath, SimPath = set_sim_path(FolderPath, Simulation, boosted_frame=False)
 
 ts = OpenPMDTimeSeries(FilePath, check_all_files=False, backend='h5py')
 
-K = -3               # snapshot to analyse
+K = 2               # snapshot to analyse
+
+elec_rest_mass     = (m_e*c**2)/e                   # Electron rest mass (eV)
+bunch_thresh       = 600e6                            # Threshold for including electrons in particle diagnostic (eV)
+bunch_thresh_norm  = bunch_thresh/elec_rest_mass    # Threshold for including electrons in particle diagnostic (normalised units)
 
 _, info_Ex = ts.get_field( iteration=ts.iterations[K], field = 'E', m=1, coord = 'x')
 
 x, y, z, ux, uy, uz, q, w = ts.get_particle( ['x', 'y', 'z', 'ux', 'uy', 'uz', 'charge', 'w'], species=Species,
-                                                iteration=ts.iterations[K], plot=False)
+                                                iteration=ts.iterations[K], plot=False, select = {'uz':[bunch_thresh_norm, None] } )
 
 # Take radial selection from full dataset
-# x, y, z, ux, uy, uz, w = radial_selection(0, 5e-6, x, y, z, ux, uy, uz, w)
+x, y, z, ux, uy, uz, w = radial_selection(0, 6e-6, x, y, z, ux, uy, uz, w)
 
 ctau = round(ts.t[K]*c*1e3,2)
 
@@ -93,7 +98,7 @@ plt.show()
 
 #%% Test transverse phase space and create plot
 
-Trans_phase = Phase_Space.Div_r_space('x', r_res=0.30, r_round=10, div_round=10, div_res=0.1,
+Trans_phase = Phase_Space.Div_r_space('x', r_res=0.20, r_round=10, div_round=10, div_res=0.1,
                               Find_Lineouts=True, lineout_height=0.2)
 
 fig1, ax1 = plt.subplots()
@@ -114,7 +119,7 @@ plt.show()
 
 BP_xy = BeamProjection(x, y, w)
 
-YAG, Hist_Limits, _, _ = BP_xy.beam_projection(r_res=0.3, r_round=1, independant_bins=False, equal_bins=True)
+YAG, Hist_Limits, _, _ = BP_xy.beam_projection(r_res=0.2, r_round=1, independant_bins=False, equal_bins=True)
 
 fig1, ax1 = plt.subplots()
 plt.imshow(np.flipud(YAG), cmap=cmap_white(plt.cm.winter), extent=([Hist_Limits[0], Hist_Limits[1], Hist_Limits[0], Hist_Limits[1]]), aspect='auto', norm=LogNorm())
@@ -133,7 +138,7 @@ plt.show()
 
 BP_xz = BeamProjection(x, z, w)
 
-xz_project, hist_limits, X_Bins, Z_Bins = BP_xz.beam_projection(r_res=0.3, r_round=10, independant_bins=True, equal_bins=False)
+xz_project, hist_limits, X_Bins, Z_Bins = BP_xz.beam_projection(r_res=0.2, r_round=10, independant_bins=True, equal_bins=False)
 
 fig1, ax1 = plt.subplots()
 plt.imshow(np.flipud(xz_project), cmap=cmap_white(plt.cm.spring), extent=([hist_limits[2], hist_limits[3], hist_limits[0], hist_limits[1]]), aspect='auto', norm=LogNorm())
@@ -150,7 +155,7 @@ plt.show()
 
 #%% Test beam projection class - xz space projection with predetermined histogram limits
 
-window_limits = [info_Ex.rmin, info_Ex.rmax, info_Ex.zmin, info_Ex.zmax]
+window_limits = magnitude_conversion(np.array([info_Ex.rmin, info_Ex.rmax, info_Ex.zmin, info_Ex.zmax]), "", "micro")
 
 print("Simulation window limits:")
 print("zmin = %0.2f um" % np.round(info_Ex.zmin*1e6,2) )
@@ -159,12 +164,10 @@ print("rmin = %0.2f um" % np.round(info_Ex.rmin*1e6,2) )
 print("rmax = %0.2f um" % np.round(info_Ex.rmax*1e6,2) )
 
 
-xz_project_full, window_extent_converted, A_Bins, B_Bins = BP_xz.beam_projection_fixed_window(window_extent = window_limits, r_res=0.3)
-
-# y_plt_min, y_plt_max = plt_limits_log(xz_project_full, min_offset = 0, max_offset = 0)
+xz_project_full, _, _ = BP_xz.beam_projection_fixed_window(window_extent = window_limits, r_res=0.3)
 
 fig1, ax1 = plt.subplots()
-plt.imshow(np.flipud(xz_project_full), cmap=cmap_white(plt.cm.spring), extent=([window_extent_converted[2], window_extent_converted[3], window_extent_converted[0], window_extent_converted[1]]), aspect='auto', norm=LogNorm())
+plt.imshow(np.flipud(xz_project_full), cmap=cmap_white(plt.cm.spring), extent=([window_limits[2], window_limits[3], window_limits[0], window_limits[1]]), aspect='auto', norm=LogNorm())
 plt.colorbar().set_label(label='Number of electrons',size=fsize)
 plt.clim(plt_limits_log(xz_project_full, min_offset = 0, max_offset = 1))
 
@@ -172,7 +175,7 @@ ax1.xaxis.set_major_formatter(FormatStrFormatter('%.0f'))
 ax1.set_title("c$\\tau$ = %0.2f mm\nUsing class. Full simulation window" % round(ctau,2), fontsize=fsize)
 ax1.set_xlabel('z ($\\mu$m)', fontsize=fsize)
 ax1.set_ylabel('x ($\\mu$m)', fontsize=fsize)
-plt.axis([window_extent_converted[2], window_extent_converted[3], window_extent_converted[0], window_extent_converted[1]])
+plt.axis([window_limits[2], window_limits[3], window_limits[0], window_limits[1]])
 plt.show()
 
 
@@ -188,5 +191,5 @@ ax1.xaxis.set_major_formatter(FormatStrFormatter('%.0f'))
 ax1.set_title("c$\\tau$ = %0.2f mm\nWhole window plot using standard function" % round(ctau,2), fontsize=fsize)
 ax1.set_xlabel('z ($\\mu$m)', fontsize=fsize)
 ax1.set_ylabel('x ($\\mu$m)', fontsize=fsize)
-plt.axis([window_extent_converted[2], window_extent_converted[3], window_extent_converted[0], window_extent_converted[1]])
+plt.axis([window_limits[2], window_limits[3], window_limits[0], window_limits[1]])
 plt.show()

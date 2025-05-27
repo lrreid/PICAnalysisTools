@@ -8,12 +8,13 @@ import numpy as np
 from openpmd_viewer.addons import LpaDiagnostics
 from PICAnalysisTools.Laser_Properties import LaserProperties
 from PICAnalysisTools.utils.sim_path import set_sim_path
+from PICAnalysisTools.Laser_Properties import get_central_wavelength
 fsize = 12
 
 #%% Read data from files
 
-FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\fbpic\20230623_LWFA_Example'
-Simulation = '20241104_a0_2_25fs_1E18_10um'
+FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools'
+Simulation = 'example_data'
 FilePath, SimPath   = set_sim_path(FolderPath, Simulation, boosted_frame=False)
 
 ts = LpaDiagnostics(FilePath, check_all_files=False, backend='h5py')
@@ -37,3 +38,13 @@ print("\n")
 #%% Loop through all snapshots
 
 output = LP.get_laser_properties_loop(save_txt=True, Sim_Path=SimPath)
+
+#%% Find the central wavelength of the spectrum
+
+avg, width, peak = get_central_wavelength(ts, snapshot)
+
+print("\n")
+print("Average wavelength: %0.2f nm" % np.round(avg,2))
+print("RMS width: %0.2f nm" % np.round(width,2))
+print("Wavelength at peak intensity: %0.2f nm" % np.round(peak,2))
+print("\n")

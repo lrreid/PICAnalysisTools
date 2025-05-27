@@ -1,5 +1,6 @@
 """
-
+TO DO:
+    - Check this function works with Linux and Windows style file paths
 """
 
 from os.path import exists, join
@@ -20,9 +21,9 @@ def set_sim_path(FolderPath, Simulation, boosted_frame=False):
 
     return FilePath, SimPath
 
-def set_Analysis_path(FolderPath, Simulation, Ana_name):
+def set_analysis_path(SimPath, Ana_name):
 
-    Analysis_path = join(FolderPath, Simulation, 'Analysed', '%s' % Ana_name)
+    Analysis_path = join(SimPath, 'Analysed', '%s' % Ana_name)
 
     if exists(Analysis_path) is False:
         makedirs(Analysis_path)

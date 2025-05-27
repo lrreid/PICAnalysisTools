@@ -375,6 +375,8 @@ class PhaseSpace():
         if Find_Lineouts is True:
             # Lineout plots are: plt.plot(Row_sum_Trans, D_Bins[:-1]) and plt.plot(R_line, col_sum_Trans)
             # This only makes sense with x and y coords so no need to set centre of beam to zero, unlike Energy_r_space()
+
+            # The lineouts should the their own function which takes in the histograms and ouputs the lines.
             X_height   = (2*max_div) * lineout_height                     # lineout 20% of plot window in height
             Div_height = (R_max - R_min) * lineout_height
     
@@ -439,11 +441,9 @@ class BeamProjection():
         # Calculate beam projection with user defined histogram limits.
         # Useful for calcuating beam projection with whole simulation box view.
 
-        window_extent_converted  = magnitude_conversion(np.array(window_extent), "", self.r_unit)
-
-        A_Bins = np.arange(window_extent_converted[0], window_extent_converted[1]+r_res, r_res)
-        B_Bins = np.arange(window_extent_converted[2], window_extent_converted[3]+r_res, r_res)
+        A_Bins = np.arange(window_extent[0], window_extent[1]+r_res, r_res)
+        B_Bins = np.arange(window_extent[2], window_extent[3]+r_res, r_res)
 
         projection, _, _ = np.histogram2d(self.a_converted, self.b_converted, bins=(A_Bins, B_Bins), weights=self.w )
 
-        return projection, window_extent_converted, A_Bins, B_Bins
+        return projection, A_Bins, B_Bins
