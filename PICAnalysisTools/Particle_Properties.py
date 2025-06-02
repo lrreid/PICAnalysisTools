@@ -447,3 +447,13 @@ class BeamProjection():
         projection, _, _ = np.histogram2d(self.a_converted, self.b_converted, bins=(A_Bins, B_Bins), weights=self.w )
 
         return projection, A_Bins, B_Bins
+    
+
+
+def get_normalised_momentum(energy, energy_unit: str = "Mega"):
+
+    elec_rest_mass = (m_e*c**2)/e                   # Electron rest mass (eV)
+    energy_eV      = magnitude_conversion(energy, energy_unit, "")
+    energy_norm    = energy_eV/elec_rest_mass    # Threshold for including electrons in particle diagnostic (normalised units)
+
+    return energy_norm

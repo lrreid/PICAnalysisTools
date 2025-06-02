@@ -1,21 +1,14 @@
 """
+Warning! Function still under construction and testing.
+
 Functions for plotting of plasma fields.
 
 TO DO:
     - option for Accelerating field lineout
     - Option for plasma density lineout
-    - Option for normalisation of the z axis (Centre on laser centroid or normalise to plasma density) - This should be in its own function
     - option for normalisation of the r axis (to the laser spot or skin depth)
-    - Option for cropping in r
     - option for cropping in z
-    - option for defining plasma density limits
-    - option for chaning units in z axis and r axis. (mm would be really useful for z axis)
-    - option for choosing units of ctau in file name and plot title
-    - Modify set_Analysis_path to have optional inputs.
     - options for particle species selection in space and energy
-
-    - Need to think about how units are used. Particularly for r_max
-
     - Create function to loop through all simulation snapshots. It should call plt_plasma_density
 
 """
@@ -31,7 +24,10 @@ from PICAnalysisTools.utils.sim_path import set_sim_path, set_analysis_path
 from PICAnalysisTools.Laser_Properties import get_a0_field_map
 from PICAnalysisTools.utils.plot_limits import plt_limits_log, plt_limits_log_absolute
 from PICAnalysisTools.utils.white_background_colormap import cmap_white
-from PICAnalysisTools.utils.unit_conversions import magnitude_conversion
+from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, get_order_letter
+from PICAnalysisTools.Laser_Properties import get_laser_cenroid
+from PICAnalysisTools.utils.plasma_calcs import PlasmaDen_Conversions
+from PICAnalysisTools.Particle_Properties import get_normalised_momentum
 
 plasma_species = "rho_plasma_elec"
 beam_species   = 'electrons'
@@ -45,7 +41,7 @@ K  = 2
 
 #%% Extract data from file
 
-def plt_plasma_denstiy(ts, snapshot, plasma_species, den_unit = "centi", ne_lims = None, log_scale = False, r_unit = "micro", z_unit = "micro", crop_r = False, r_max = 40, show_laser_countour = False, show_beam = False, beam_species = None, save_plots = False, SimPath = None, Ana_name = "ne_plots", fsize = 12):
+def plt_plasma_denstiy(ts, snapshot, plasma_species, den_unit = "centi", ne0 = None, ne_lims = None, log_scale = False, r_unit = "micro", z_unit = "micro", crop_r = False, r_max = 40, z_norm = False, Z_norm_type = "laser",  show_laser_countour = False, show_beam = False, beam_species = None, save_plots = False, SimPath = None, Ana_name = "ne_plots", fsize = 12):
 
     if save_plots is True:
         # If an analysis path is not defined, the current working directory is chosen as a default.
@@ -88,34 +84,59 @@ def plt_plasma_denstiy(ts, snapshot, plasma_species, den_unit = "centi", ne_lims
         beam_dist     = BeamProjection(x, z, w).beam_projection_fixed_window(window_extent = window_limits, r_res=0.2)
 
 
+    #%% Set plot limits and
+
+    # Get r limits
+    r_data = magnitude_conversion(info_den.r, "", r_unit)
     if crop_r is False or r_max is None:
         r_max = magnitude_conversion(info_den.rmax, "", r_unit)
 
-    # imshow_extent = 
+    # Get z limits
+    if ne0 is None:
+        ne0 = den[int(len(info_den.r)//2),-1] # Assume plasma density is the value at the far right of the simualtion box at r = 0.
+
+    if z_norm is True:
+        z_data = normalise_z(ts, snapshot, norm_type = Z_norm_type, n_e = ne0, z_unit = z_unit)
+    else:
+        z_data = magnitude_conversion(info_den.z, "", z_unit)
+
+    z_min = np.min(z_data)
+    z_max = np.max(z_data)
+
+    extent_converted   = np.array([z_min, z_max, -r_max, r_max])
+    extent_full_window = np.array([z_min, z_max, magnitude_conversion(info_den.rmin, "", r_unit), magnitude_conversion(info_den.rmax, "", r_unit)])
+
 
     #%% Plot plasma density
+
+    title   = "c$\\tau$ = %0.2f %sm" % (ctau, "$\\mu$" if get_order_letter(z_unit) == "u" else get_order_letter(z_unit))
+    if z_norm is True and Z_norm_type == "l_p":
+        z_label = "z ($\\times\\lambda_{p}$)"
+    else:
+        z_label = "z (%sm)" % ("$\\mu$" if get_order_letter(z_unit) == "u" else get_order_letter(z_unit))
+    r_label = "r (%sm)" % ("$\\mu$" if get_order_letter(r_unit) == "u" else get_order_letter(r_unit))
+
 
     fig, ax = plt.subplots(dpi=150)
 
     if log_scale is True:
-        plt.imshow(den, cmap=plt.cm.viridis_r, extent=(np.round(info_den.imshow_extent*1e6,0)), aspect='auto', norm=LogNorm())
+        plt.imshow(den, cmap=plt.cm.viridis_r, extent=(extent_full_window), aspect='auto', norm=LogNorm())
     else:
-        plt.imshow(den, cmap=plt.cm.viridis_r, extent=(np.round(info_den.imshow_extent*1e6,0)), aspect='auto') #, norm=LogNorm())
+        plt.imshow(den, cmap=plt.cm.viridis_r, extent=(extent_full_window), aspect='auto')
     plt.colorbar().set_label(label='n$_{e}$ (cm$^{-3}$)', size=fsize)
-    plt.clim(ne_lims)
-    # plt.axis(np.round(info_den.imshow_extent*1e6,0))          # set axes [xmin, xmax, ymin, ymax]
-    plt.axis([info_den.zmin*1e6, info_den.zmax*1e6, -r_max, r_max])
-    ax.set_title("c$\\tau$ = %d $\\mu$m" % ctau, fontsize=fsize)
-    ax.set_xlabel('z ($\\mu$m)', fontsize=fsize)
-    ax.set_ylabel('r ($\\mu$m)', fontsize=fsize)
+    plt.clim(ne_lims)   
+    plt.axis(extent_converted)                                      # set axes [xmin, xmax, ymin, ymax]
+    ax.set_title("%s" % title, fontsize=fsize)
+    ax.set_xlabel('%s' % z_label, fontsize=fsize)
+    ax.set_ylabel('%s' % r_label, fontsize=fsize)
 
     if show_laser_countour is True:
         # Add countour plot of laser a0
-        CS = ax.contour(np.array(info_den.z)*1e6, np.array(info_den.r)*1e6, a0_field, [0.135*a0_max, 0.2*a0_max, 0.4*a0_max, 0.6*a0_max, 0.8*a0_max, 0.98*a0_max], cmap='cool')
+        CS = ax.contour(z_data, r_data, a0_field, [0.135*a0_max, 0.2*a0_max, 0.4*a0_max, 0.6*a0_max, 0.8*a0_max, 0.98*a0_max], cmap='cool')
         ax.clabel(CS, inline=0, fontsize=0)
 
     if show_beam is True:
-        beam_proj = plt.imshow(beam_dist[0], cmap=cmap_white(plt.cm.plasma), extent=(np.round(info_den.imshow_extent*1e6,0)), aspect='auto')
+        beam_proj = plt.imshow(beam_dist[0], cmap=cmap_white(plt.cm.plasma), extent=(extent_full_window), aspect='auto')
         beam_proj.set_clim(0, plt_limits_log_absolute(beam_dist[0], offset = -1)*0.2)
 
     fig.tight_layout()
@@ -129,6 +150,29 @@ def plt_plasma_denstiy(ts, snapshot, plasma_species, den_unit = "centi", ne_lims
     return None
 
 
+# move to a file in utils??
+def normalise_z(ts, snapshot, norm_type: str = "laser", n_e = None, z_unit: str = "micro", den_unit: str = "centi"):
+    # Is there a way to make this more robust? What if there is no E field data in the file or no x axis?
+    # Can I use something like ts.avail_species[0]?
+    # Have z data as an input rather than re-reading the data file?
+
+    _, info_Ex     = ts.get_field( iteration=ts.iterations[snapshot], field='E', m=1, coord='x')
+    z_data         = magnitude_conversion(info_Ex.z, "", z_unit)
+    laser_centroid = get_laser_cenroid(ts, snapshot, centroid_unit = z_unit)[0]
+
+    # Is there any more interesting normalisation types to have?
+    if norm_type == 'l_p':
+        lambda_p = PlasmaDen_Conversions(n_e, den_unit=den_unit, wavelength_unit=z_unit).lambda_p
+        Z_norm = ( z_data - laser_centroid ) / lambda_p
+    elif norm_type == 'laser':
+        Z_norm = z_data - laser_centroid
+    else:
+        print("norm type incorrectly defined. Original simulation axis chosen as default.")
+        Z_norm = z_data
+
+    return Z_norm
+
+
 #%% Run instance of function under test
 
-plt_plasma_denstiy(ts=ts, snapshot=K, plasma_species=plasma_species, den_unit = "centi", log_scale = False, crop_r = True, r_max = 60, show_laser_countour = True, show_beam = True, beam_species = None, save_plots = False, SimPath = SimPath, Ana_name = "ne_plots", fsize = 12)
+plt_plasma_denstiy(ts=ts, snapshot=K, plasma_species=plasma_species, den_unit = "centi", log_scale = False, r_unit = "micro", z_unit = "milli", crop_r = True, r_max = 60, z_norm = True, Z_norm_type = "l_p", show_laser_countour = True, show_beam = True, beam_species = None, save_plots = False, SimPath = SimPath, Ana_name = "ne_plots", fsize = 12)
