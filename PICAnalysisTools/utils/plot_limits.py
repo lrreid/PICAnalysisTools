@@ -41,7 +41,10 @@ def plt_limits_log(array, min_offset = 0, max_offset = 0):
 
 def plt_limits_log_absolute(array, offset = 0):
 
-    order = np.floor(np.log10(np.max(abs(array)))) # order of magnitude of max
-    plt_max   = roundup(np.max(abs(array)), 10**(order+offset))
+    if np.max(array) == 0:
+        plt_max = 1 
+    else:
+        order = np.floor(np.log10(np.max(abs(array)))) # order of magnitude of max
+        plt_max   = roundup(np.max(abs(array)), 10**(order+offset))
 
     return plt_max

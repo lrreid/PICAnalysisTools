@@ -1,6 +1,4 @@
 """
-Reworking field_plotting for single combined function which plots plasma density and electric and magnetic fields
-
 Warning! Function still under construction and testing.
 
 Functions for plotting of plasma fields.
@@ -40,7 +38,7 @@ FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Co
 Simulation = 'example_data'
 FilePath, SimPath = set_sim_path(FolderPath, Simulation, boosted_frame=False)
 
-ts = OpenPMDTimeSeries(FilePath, check_all_files=False, backend='h5py')
+ts = OpenPMDTimeSeries(FilePath, check_all_files=False, backend='openpmd-api')
 K  = 2
 
 #%% Extract data from file
@@ -75,11 +73,6 @@ def plt_plasma_field(ts, snapshot, field, mode, coord, plasma_species = "rho", f
         cbar_label = '$%s_{%s}$ (%sVm$^{-1}$)' % (field, coord, get_order_letter(field_unit))
         colour_map = plt.cm.PRGn_r
 
-    if field == "plasma":
-        den_unit = field_unit
-    else:
-        den_unit = "centi"
-
     if colour_lims is None:
         if field == "plasma":
             if log_scale is True:
@@ -94,9 +87,6 @@ def plt_plasma_field(ts, snapshot, field, mode, coord, plasma_species = "rho", f
             else:
                 colour_lims = plt_limits_absolute(field_map, 1)
 
-    if show_laser_countour is True:
-        a0_field, a0_max = get_a0_field_map(ts, snapshot)
-
     # If the name of a particle species is not specified, try to find one automatically and choose the zeroth. 
     # If none available, switch off show beam.
     if beam_species is None:
@@ -106,46 +96,6 @@ def plt_plasma_field(ts, snapshot, field, mode, coord, plasma_species = "rho", f
             print("No particle species available")
             show_beam = False
 
-    if show_beam is True:
-        # Everything here should be moved to its own function.
-
-        if particle_selection is True:
-        # Convert selection_limits to SI units, compatible with ts.get_particle()
-        # There must be an easier way to do this.
-            if selection_limits[0] is None:
-                selection_limits[0] = info_field.zmin
-            else:
-                selection_limits[0] = magnitude_conversion(selection_limits[0], z_unit, "")
-            if selection_limits[1] is None:
-                selection_limits[1] = info_field.zmax
-            else:
-                selection_limits[1] = magnitude_conversion(selection_limits[1], z_unit, "")
-            if selection_limits[2] is None:
-                selection_limits[2] = info_field.rmin
-            else:
-                selection_limits[2] = magnitude_conversion(selection_limits[2], r_unit, "")
-            if selection_limits[3] is None:
-                selection_limits[3] = info_field.rmax
-            else:
-                selection_limits[3] = magnitude_conversion(selection_limits[3], r_unit, "")
-
-            if selection_limits[4] is not None:
-                selection_limits[4] = get_normalised_momentum(selection_limits[4], energy_unit)
-            if selection_limits[5] is not None:
-                selection_limits[5] = get_normalised_momentum(selection_limits[5], energy_unit)
-
-
-            x, z, w = ts.get_particle( ['x', 'z', 'w'], species=beam_species, iteration=ts.iterations[snapshot], plot=False, select={'x':[selection_limits[2],selection_limits[3]], 'y':[selection_limits[2],selection_limits[3]], 'z':[selection_limits[0],selection_limits[1]], 'uz':[selection_limits[4],selection_limits[5]]})
-        else:
-            x, z, w = ts.get_particle( ['x', 'z', 'w'], species=beam_species, iteration=ts.iterations[snapshot], plot=False)
-
-        if len(w) == 0:
-            show_beam = False
-            print("No particles within selection")
-        else:
-            window_limits = magnitude_conversion(np.array([info_field.rmin, info_field.rmax, info_field.zmin, info_field.zmax]), "", "micro")
-            beam_dist     = np.flipud(BeamProjection(x, z, w).beam_projection_fixed_window(window_extent = window_limits, r_res=magnitude_conversion(info_field.dr, "", "micro"))[0])
-
     #%% Set plot limits and
 
     # Get r limits
@@ -154,14 +104,22 @@ def plt_plasma_field(ts, snapshot, field, mode, coord, plasma_species = "rho", f
         r_max = magnitude_conversion(info_field.rmax, "", r_unit)
 
     # Get z limits
-    if ne0 is None:
+    if ne0 is None and Z_norm_type == "l_p":
+        if field == "plasma":
+            den_unit = field_unit
+        else:
+            den_unit = "centi"
+
         if field == "plasma":
             ne0 = field_map[int(len(info_field.r)//2),-1] # Assume plasma density is the value at the far right of the simualtion box at r = 0.
         else:
             ne0 = get_background_density(ts, snapshot, Species_name = plasma_species, den_unit = den_unit)
 
     if z_norm is True:
-        z_data = normalise_z(ts, snapshot, norm_type = Z_norm_type, n_e = ne0, z_unit = z_unit, den_unit = den_unit) # Need to think about units for plasma density. I can't use field_unit here. 
+        if Z_norm_type == "l_p":
+            z_data = normalise_z(ts, snapshot, norm_type = Z_norm_type, n_e = ne0, z_unit = z_unit, den_unit = den_unit) # Need to think about units for plasma density. I can't use field_unit here. 
+        else:
+            z_data = normalise_z(ts, snapshot, norm_type = Z_norm_type, z_unit = z_unit)
     else:
         z_data = magnitude_conversion(info_field.z, "", z_unit)
 
@@ -175,10 +133,10 @@ def plt_plasma_field(ts, snapshot, field, mode, coord, plasma_species = "rho", f
 
     title   = "c$\\tau$ = %0.2f %sm" % (ctau, "$\\mu$" if get_order_letter(z_unit) == "u" else get_order_letter(z_unit))
     if z_norm is True and Z_norm_type == "l_p":
-        z_label = "z ($\\times\\lambda_{p}$)"
+        x_label = "z ($\\times\\lambda_{p}$)"
     else:
-        z_label = "z (%sm)" % ("$\\mu$" if get_order_letter(z_unit) == "u" else get_order_letter(z_unit))
-    r_label = "r (%sm)" % ("$\\mu$" if get_order_letter(r_unit) == "u" else get_order_letter(r_unit))
+        x_label = "z (%sm)" % ("$\\mu$" if get_order_letter(z_unit) == "u" else get_order_letter(z_unit))
+    y_label = "r (%sm)" % ("$\\mu$" if get_order_letter(r_unit) == "u" else get_order_letter(r_unit))
 
     fig, ax = plt.subplots(dpi=150)
 
@@ -190,9 +148,8 @@ def plt_plasma_field(ts, snapshot, field, mode, coord, plasma_species = "rho", f
     plt.clim(colour_lims)   
     plt.axis(extent_converted)                                      # set axes [xmin, xmax, ymin, ymax]
     ax.set_title("%s" % title, fontsize=fsize)
-    ax.set_xlabel('%s' % z_label, fontsize=fsize)
-    ax.set_ylabel('%s' % r_label, fontsize=fsize)
-
+    ax.set_xlabel('%s' % x_label, fontsize=fsize)
+    ax.set_ylabel('%s' % y_label, fontsize=fsize)
 
     if show_accel_lineout is True:
         if field == "focus":
@@ -201,7 +158,6 @@ def plt_plasma_field(ts, snapshot, field, mode, coord, plasma_species = "rho", f
             LO_color   = "red"
         E_Accel_LO = get_Accel_lineout(ts, snapshot)
         ax.plot(z_data, normalise(E_Accel_LO)*abs(extent_converted[2]), color=LO_color, linewidth=1) 
-
 
     if show_ne_lineout is True:
         if field == "focus":
@@ -212,11 +168,12 @@ def plt_plasma_field(ts, snapshot, field, mode, coord, plasma_species = "rho", f
         ax.plot(z_data, normalise(ne_lineout)*abs(extent_converted[2]), color=LO_color, linewidth=1) 
 
     if show_laser_countour is True:
-        # Add countour plot of laser a0
-        CS = ax.contour(z_data, r_data, a0_field, [0.135*a0_max, 0.2*a0_max, 0.4*a0_max, 0.6*a0_max, 0.8*a0_max, 0.98*a0_max], cmap='cool')
-        ax.clabel(CS, inline=0, fontsize=0)
+        a0_field, a0_max = get_a0_field_map(ts, snapshot)
+        a0_contour       = ax.contour(z_data, r_data, a0_field, [0.135*a0_max, 0.2*a0_max, 0.4*a0_max, 0.6*a0_max, 0.8*a0_max, 0.98*a0_max], cmap='cool')
+        ax.clabel(a0_contour, inline=0, fontsize=0)
 
     if show_beam is True:
+        beam_dist = get_beam_distribution(ts, info_field, snapshot, particle_selection, selection_limits, z_unit, r_unit, energy_unit)
         beam_proj = plt.imshow(beam_dist, cmap=cmap_white(plt.cm.plasma), extent=(extent_full_window), aspect='auto')
         beam_proj.set_clim(0, plt_limits_log_absolute(beam_dist, offset = -1)*0.2)
 
@@ -277,12 +234,44 @@ def get_ne_lineout(ts, snapshot, plasma_species, unit = "centi"):
 
     return ne_lineout
 
+def get_beam_distribution(ts, info_field, snapshot, particle_selection, selection_limits, z_unit, r_unit, energy_unit):
+    if particle_selection is True:
+        if selection_limits[0] is None:
+            selection_limits[0] = info_field.zmin
+        else:
+            selection_limits[0] = magnitude_conversion(selection_limits[0], z_unit, "")
+        if selection_limits[1] is None:
+            selection_limits[1] = info_field.zmax
+        else:
+            selection_limits[1] = magnitude_conversion(selection_limits[1], z_unit, "")
+        if selection_limits[2] is None:
+            selection_limits[2] = info_field.rmin
+        else:
+            selection_limits[2] = magnitude_conversion(selection_limits[2], r_unit, "")
+        if selection_limits[3] is None:
+            selection_limits[3] = info_field.rmax
+        else:
+            selection_limits[3] = magnitude_conversion(selection_limits[3], r_unit, "")
+
+        if selection_limits[4] is not None:
+            selection_limits[4] = get_normalised_momentum(selection_limits[4], energy_unit)
+        if selection_limits[5] is not None:
+            selection_limits[5] = get_normalised_momentum(selection_limits[5], energy_unit)
+
+        x, z, w = ts.get_particle( ['x', 'z', 'w'], species=beam_species, iteration=ts.iterations[snapshot], plot=False, select={'x':[selection_limits[2],selection_limits[3]], 'y':[selection_limits[2],selection_limits[3]], 'z':[selection_limits[0],selection_limits[1]], 'uz':[selection_limits[4],selection_limits[5]]})
+    else:
+        x, z, w = ts.get_particle( ['x', 'z', 'w'], species=beam_species, iteration=ts.iterations[snapshot], plot=False)
+
+    window_limits = magnitude_conversion(np.array([info_field.rmin, info_field.rmax, info_field.zmin, info_field.zmax]), "", "micro")
+    beam_dist     = np.flipud(BeamProjection(x, z, w).beam_projection_fixed_window(window_extent = window_limits, r_res=magnitude_conversion(info_field.dr, "", "micro"))[0])
+
+    return beam_dist
 
 #%% Run instance of function under test
 
 particle_select = [None, None, None, None, 50, None] # Selection limits for showing particles on plot. [z_min, z_max, r_min, r_max, E_min, E_max]. Units are assumed to match: z_unit, r_unit, energy_unit
 
-plt_plasma_field(ts=ts, snapshot=K, field="focus", mode=0, coord="z", plasma_species=plasma_species, field_unit = "giga", log_scale = False,
-                 r_unit = "micro", z_unit = "milli", crop_r = True, r_max = 60, z_norm = False, Z_norm_type = "l_p", show_laser_countour = True,
+plt_plasma_field(ts=ts, snapshot=K, field="E", mode=0, coord="z", plasma_species=plasma_species, field_unit = "giga", log_scale = False,
+                 r_unit = "micro", z_unit = "micro", crop_r = True, r_max = 60, z_norm = True, Z_norm_type = "laser", show_laser_countour = True,
                  show_beam = True, beam_species = None, particle_selection = True, selection_limits = particle_select, energy_unit = "Mega",
-                 show_accel_lineout = False, show_ne_lineout = False, save_plots = False, SimPath = SimPath, Ana_name = "ne_plots", fsize = 12)
+                 show_accel_lineout = False, show_ne_lineout = False, save_plots = False, SimPath = SimPath, Ana_name = "field_plots", fsize = 12)
