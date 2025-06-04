@@ -12,3 +12,7 @@ __pycache__
 *.pptx
 *.png
 notes.txt
+
+# Work in progress files
+wip*
+old*

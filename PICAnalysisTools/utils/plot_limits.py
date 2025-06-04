@@ -18,7 +18,7 @@ def plt_limits_absolute(array, rounding):
     
     plt_max = roundup( np.max(abs(array)) , rounding)
 
-    return plt_max
+    return -plt_max, plt_max
 
 
 def plt_limits_log(array, min_offset = 0, max_offset = 0):

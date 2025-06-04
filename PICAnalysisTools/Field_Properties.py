@@ -89,11 +89,11 @@ class PlasmaField():
         return magnitude_conversion_vol(den, "", self.den_unit, reciprocal_units = True), info_rho
     
 
-def get_focusing_field_map(ts, Snapshot):
+def get_focusing_field_map(ts, Snapshot, field_unit = "Giga"):
     # get focusing field of plasma wave
 
     Ex0, info_field = ts.get_field( iteration=ts.iterations[Snapshot], field='E', m=0, coord='x')                     # Extract Ex field of plasma wave
     By, _           = ts.get_field( iteration=ts.iterations[Snapshot], field='B', m=0, coord='y')                     # Extract By field of plasma wave
     focusing_field = -1*(Ex0-(c*By))
 
-    return focusing_field, info_field
+    return magnitude_conversion(focusing_field, "", field_unit), info_field
