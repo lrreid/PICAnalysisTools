@@ -109,4 +109,4 @@ def ionisation_intensity_theshold(element, lambda0=800, wavelength_unit="nano", 
     a0  = a0_from_intensity(Int, lambda0=lambda0, int_unit="", wavelength_unit=wavelength_unit)
     
     
-    return element_name, magnitude_conversion_area(Int, "", int_unit, reciprocal_units = True), a0
+    return element_name[1], magnitude_conversion_area(Int, "", int_unit, reciprocal_units = True), a0

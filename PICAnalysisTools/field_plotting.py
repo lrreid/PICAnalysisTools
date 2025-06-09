@@ -1,11 +1,7 @@
 """
-Warning! Function still under construction and testing.
-
 Functions for plotting of plasma fields.
 
 TO DO:
-    - option for Accelerating field lineout
-    - Option for plasma density lineout
     - option for normalisation of the r axis (to the laser spot or skin depth)
     - option for cropping in z
     - Create function to loop through all simulation snapshots. It should call plt_plasma_density
@@ -20,26 +16,15 @@ import numpy as np
 from scipy.constants import c
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
-from openpmd_viewer import OpenPMDTimeSeries
 from PICAnalysisTools.Field_Properties import FieldProperites, PlasmaField, get_focusing_field_map
 from PICAnalysisTools.Particle_Properties import BeamProjection, get_normalised_momentum
 from PICAnalysisTools.Laser_Properties import get_a0_field_map, get_laser_cenroid
-from PICAnalysisTools.utils.sim_path import set_sim_path, set_analysis_path
+from PICAnalysisTools.utils.sim_path import set_analysis_path
 from PICAnalysisTools.utils.plot_limits import plt_limits_log, plt_limits_log_absolute, plt_limits_absolute
 from PICAnalysisTools.utils.white_background_colormap import cmap_white
 from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, get_order_letter
 from PICAnalysisTools.utils.plasma_calcs import PlasmaDen_Conversions
 from PICAnalysisTools.utils.rounding import normalise
-
-plasma_species = "rho_plasma_elec"
-beam_species   = 'electrons'
-
-FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools\PICAnalysisTools'
-Simulation = 'example_data'
-FilePath, SimPath = set_sim_path(FolderPath, Simulation, boosted_frame=False)
-
-ts = OpenPMDTimeSeries(FilePath, check_all_files=False, backend='openpmd-api')
-K  = 2
 
 #%% Extract data from file
 
@@ -173,7 +158,7 @@ def plt_plasma_field(ts, snapshot, field, mode, coord, plasma_species = "rho", f
         ax.clabel(a0_contour, inline=0, fontsize=0)
 
     if show_beam is True:
-        beam_dist = get_beam_distribution(ts, info_field, snapshot, particle_selection, selection_limits, z_unit, r_unit, energy_unit)
+        beam_dist = get_beam_distribution(ts, info_field, snapshot, beam_species, particle_selection, selection_limits, z_unit, r_unit, energy_unit)
         beam_proj = plt.imshow(beam_dist, cmap=cmap_white(plt.cm.plasma), extent=(extent_full_window), aspect='auto')
         beam_proj.set_clim(0, plt_limits_log_absolute(beam_dist, offset = -1)*0.2)
 
@@ -234,7 +219,7 @@ def get_ne_lineout(ts, snapshot, plasma_species, unit = "centi"):
 
     return ne_lineout
 
-def get_beam_distribution(ts, info_field, snapshot, particle_selection, selection_limits, z_unit, r_unit, energy_unit):
+def get_beam_distribution(ts, info_field, snapshot, beam_species, particle_selection, selection_limits, z_unit, r_unit, energy_unit):
     if particle_selection is True:
         if selection_limits[0] is None:
             selection_limits[0] = info_field.zmin
@@ -266,12 +251,3 @@ def get_beam_distribution(ts, info_field, snapshot, particle_selection, selectio
     beam_dist     = np.flipud(BeamProjection(x, z, w).beam_projection_fixed_window(window_extent = window_limits, r_res=magnitude_conversion(info_field.dr, "", "micro"))[0])
 
     return beam_dist
-
-#%% Run instance of function under test
-
-particle_select = [None, None, None, None, 50, None] # Selection limits for showing particles on plot. [z_min, z_max, r_min, r_max, E_min, E_max]. Units are assumed to match: z_unit, r_unit, energy_unit
-
-plt_plasma_field(ts=ts, snapshot=K, field="E", mode=0, coord="z", plasma_species=plasma_species, field_unit = "giga", log_scale = False,
-                 r_unit = "micro", z_unit = "micro", crop_r = True, r_max = 60, z_norm = True, Z_norm_type = "laser", show_laser_countour = True,
-                 show_beam = True, beam_species = None, particle_selection = True, selection_limits = particle_select, energy_unit = "Mega",
-                 show_accel_lineout = False, show_ne_lineout = False, save_plots = False, SimPath = SimPath, Ana_name = "field_plots", fsize = 12)

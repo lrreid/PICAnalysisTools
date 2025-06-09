@@ -31,14 +31,13 @@ def get_element_name(element):
     """
     
     filename = os.path.join( os.path.dirname(__file__), 'chemical_element_list.txt' )
-    # filename = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools\PICAnalysisTools\utils\chemical_element_list.txt' # for testing purposes only.
     
     with open(filename, 'r') as f:
         csv_data = array([l for l in reader(f, delimiter='\t', skipinitialspace=True)])
     
-    index         = where(csv_data == str(element))[0][0] # Get the row number which matches the chosen element
+    index         = where(csv_data == element)[0][0] # Get the row number which matches the chosen element
     atomic_number = csv_data[index,0]
     name          = csv_data[index,1]
     symbol        = csv_data[index,2]
     
-    return atomic_number, name, symbol
+    return float(atomic_number), name, symbol
