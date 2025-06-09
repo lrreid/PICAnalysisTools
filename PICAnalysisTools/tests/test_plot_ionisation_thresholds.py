@@ -51,7 +51,7 @@ time_unit   = "femto"
 laser_a0, laser_I = Gaussian_laser_intensitiy(Energy=E, tau_FWHM=tau_FWHM, w0=w0, lambda0=wavelength, energy_unit=energy_unit, time_unit = time_unit, spot_unit=spot_unit, wavelength_unit=wavelength_unit, int_unit=int_unit)
 
 if show_laser is True:
-    title_string = "Laser ionisation intensity theshold of atoms\n$\\lambda_{0}$ = %d %sm, E = %0.2f %sJ, $\\omega_{0}$ = %0.2f %sm, $\\tau_{FWHM}$ = %d %ss" % (int(wavelength), get_order_letter(wavelength_unit), np.round(E,2), get_order_letter(energy_unit), np.round(w0,2), "$\\mu$" if get_order_letter(spot_unit) == "u" else get_order_letter(spot_unit), int(tau_FWHM), get_order_letter(time_unit) )
+    title_string = "Laser ionisation intensity theshold of atoms\n$\\lambda_{0}$ = %d %sm, E = %0.2f %sJ, $\\omega_{0}$ = %0.2f %sm, $\\tau_{FWHM}$ = %d %ss" % (int(wavelength), get_order_letter(wavelength_unit), np.round(E,2), get_order_letter(energy_unit), np.round(w0,2), get_order_letter(spot_unit, True), int(tau_FWHM), get_order_letter(time_unit) )
 else:
     title_string = "Laser ionisation intensity theshold of atoms"
 

@@ -3,7 +3,7 @@ Functions for converting units between any two orders of magnitude
 
 '''
 
-def order_of_magnitude(unit):
+def order_of_magnitude(unit: str):
      match unit:
           case "quecto" | "q":
                return 1e-30
@@ -53,7 +53,7 @@ def order_of_magnitude(unit):
                return 1e30
 
 
-def magnitude_conversion(values, unit_1, unit_2, reciprocal_units = False):
+def magnitude_conversion(values, unit_1: str, unit_2: str, reciprocal_units: bool = False):
 
      if unit_1 == unit_2:
           return values
@@ -68,7 +68,7 @@ def magnitude_conversion(values, unit_1, unit_2, reciprocal_units = False):
 
           return values_new
 
-def magnitude_conversion_area(values, unit_1, unit_2, reciprocal_units = False):
+def magnitude_conversion_area(values, unit_1: str, unit_2: str, reciprocal_units: bool = False):
 
      if unit_1 == unit_2:
           return values
@@ -83,7 +83,7 @@ def magnitude_conversion_area(values, unit_1, unit_2, reciprocal_units = False):
 
           return values_new     
 
-def magnitude_conversion_vol(values, unit_1, unit_2, reciprocal_units = False):
+def magnitude_conversion_vol(values, unit_1: str, unit_2: str, reciprocal_units: bool = False):
 
      if unit_1 == unit_2:
           return values
@@ -99,7 +99,7 @@ def magnitude_conversion_vol(values, unit_1, unit_2, reciprocal_units = False):
           return values_new
      
 
-def get_order_letter(unit):
+def get_order_letter(unit: str, return_mu: bool = False):
      match unit:
           case "quecto" | "q":
                return "q"
@@ -118,7 +118,10 @@ def get_order_letter(unit):
           case "nano" | "n":
                return "n"
           case "micro" | "u":
-               return "u"
+               if return_mu is True:
+                   return "$\\mu$"
+               else:
+                    return "u"
           case "milli" | "m":
                return "m"
           case "centi" | "c":

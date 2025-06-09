@@ -116,12 +116,12 @@ def plt_plasma_field(ts, snapshot, field, mode, coord, plasma_species = "rho", f
 
     #%% Plot field
 
-    title   = "c$\\tau$ = %0.2f %sm" % (ctau, "$\\mu$" if get_order_letter(z_unit) == "u" else get_order_letter(z_unit))
+    title   = "c$\\tau$ = %0.2f %sm" % (ctau, get_order_letter(z_unit, True))
     if z_norm is True and Z_norm_type == "l_p":
         x_label = "z ($\\times\\lambda_{p}$)"
     else:
-        x_label = "z (%sm)" % ("$\\mu$" if get_order_letter(z_unit) == "u" else get_order_letter(z_unit))
-    y_label = "r (%sm)" % ("$\\mu$" if get_order_letter(r_unit) == "u" else get_order_letter(r_unit))
+        x_label = "z (%sm)" % (get_order_letter(z_unit, True))
+    y_label = "r (%sm)" % (get_order_letter(r_unit, True))
 
     fig, ax = plt.subplots(dpi=150)
 
