@@ -1,6 +1,5 @@
 
 import numpy as np
-from scipy.constants import c, pi
 import matplotlib.pyplot as plt
 from PICAnalysisTools.utils.ionisation import read_ionization_energies, ionisation_intensity_theshold
 from PICAnalysisTools.utils.unit_conversions import get_order_letter
