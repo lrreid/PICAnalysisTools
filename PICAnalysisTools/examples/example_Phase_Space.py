@@ -29,8 +29,8 @@ fsize = 12
 
 #%% Read data from files
 
-FolderPath = r'/home/lewis'
-# FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools\PICAnalysisTools'
+# FolderPath = r'/home/lewis'
+FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools\PICAnalysisTools'
 Simulation = 'example_data'
 Species    = "electrons"
 

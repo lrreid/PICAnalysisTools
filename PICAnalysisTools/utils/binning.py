@@ -1,26 +1,64 @@
 
 """
-
-Date created: 01/05/2025
-Authors: Lewis R Reid
+Functions to define bins for creating histograms of data. 
 """
 
 import numpy as np
 from PICAnalysisTools.utils.rounding import roundup, rounddn
 
-def get_bins(array, r_res, r_round):
-    # array can be single arrary of numbers array = x or list of arrays array = [x, y, z]
+def get_bins(array, bin_res, bin_round):
+    """_summary_
+    Get numpy array of containing bins to be used for creating histograms of data.
 
-    r_max  = roundup(np.max(array), r_round)
-    r_min  = rounddn(np.min(array), r_round)
-    R_Bins = np.arange(r_min, r_max+r_res, r_res)
+    Parameters
+    ----------
+    array : array_like
+        List/numpy array containing data.
+    bin_res : float
+        Resolution/bin width of data for histogram
+    bin_round : float
+        Value to round up and down the max and min values of the array to find max and min bins.
 
-    return r_min, r_max, R_Bins
+    Returns
+    -------
+    bins_min: float
+        Minimum bin value
+    bins_max: float
+        Maximum bin value
+    hist_bins: numpy array
+        array of histogram bins
+    """
 
-def get_bins_absolute(array, r_res, r_round):
-    # array can be single arrary of numbers array = x or list of arrays array = [x, y, z]
+    bins_max  = roundup(np.max(array), bin_round)
+    bins_min  = rounddn(np.min(array), bin_round)
+    hist_bins = np.arange(bins_min, bins_max+bin_res, bin_res)
 
-    r_max  = roundup(np.max(abs(array)), r_round)
-    R_Bins = np.arange(-r_max, r_max+r_res, r_res)
+    return bins_min, bins_max, hist_bins
 
-    return -r_max, r_max, R_Bins
+def get_bins_absolute(array, bin_res, bin_round):
+    """
+    Get numpy array of containing bins to be used for creating histograms of data where the min = -1*max.
+
+    Parameters
+    ----------
+    array : array_like
+        List/numpy array containing data.
+    bin_res : float
+        Resolution/bin width of data for histogram
+    bin_round : float
+        Value to round up and down the max and min values of the array to find max and min bins.
+
+    Returns
+    -------
+    bins_min: float
+        Minimum bin value
+    bins_max: float
+        Maximum bin value
+    hist_bins: numpy array
+        array of histogram bins
+    """
+
+    bins_max  = roundup(np.max(abs(array)), bin_round)
+    hist_bins = np.arange(-bins_max, bins_max+bin_res, bin_res)
+
+    return -bins_max, bins_max, hist_bins

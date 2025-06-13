@@ -1,9 +1,21 @@
 ''''
 Functions for converting units between any two orders of magnitude
-
 '''
 
 def order_of_magnitude(unit: str):
+     """
+     Find the order of magnitude corresponding to its SI prefix
+
+     Parameters
+     ----------
+     unit : str
+         Prefix of order of magnitude
+
+     Returns
+     -------
+     float
+         Value corresponding to order of magnitude
+     """
      match unit:
           case "quecto" | "q":
                return 1e-30
@@ -53,53 +65,22 @@ def order_of_magnitude(unit: str):
                return 1e30
 
 
-def magnitude_conversion(values, unit_1: str, unit_2: str, reciprocal_units: bool = False):
-
-     if unit_1 == unit_2:
-          return values
-     else:
-          order_1 = order_of_magnitude(unit_1)
-          order_2 = order_of_magnitude(unit_2)
-
-          if reciprocal_units is True:
-               values_new = (order_2/order_1) * values
-          elif reciprocal_units is False:
-               values_new = (order_1/order_2) * values
-
-          return values_new
-
-def magnitude_conversion_area(values, unit_1: str, unit_2: str, reciprocal_units: bool = False):
-
-     if unit_1 == unit_2:
-          return values
-     else:
-          order_1 = order_of_magnitude(unit_1)
-          order_2 = order_of_magnitude(unit_2)
-
-          if reciprocal_units is True:
-               values_new = (order_2/order_1)**2 * values
-          elif reciprocal_units is False:
-               values_new = (order_1/order_2)**2 * values
-
-          return values_new     
-
-def magnitude_conversion_vol(values, unit_1: str, unit_2: str, reciprocal_units: bool = False):
-
-     if unit_1 == unit_2:
-          return values
-     else:
-          order_1 = order_of_magnitude(unit_1)
-          order_2 = order_of_magnitude(unit_2)
-
-          if reciprocal_units is True:
-               values_new = (order_2/order_1)**3 * values
-          elif reciprocal_units is False:
-               values_new = (order_1/order_2)**3 * values
-
-          return values_new
-     
-
 def get_order_letter(unit: str, return_mu: bool = False):
+     """
+     Get the symbol corresponding to an order of magnitude prefix
+
+     Parameters
+     ----------
+     unit : str
+         Order of magnitude prefix
+     return_mu : bool, optional
+         If true and order of magnitude is micro, return mu in latex form rather than u, by default False
+
+     Returns
+     -------
+     str
+         Order of magnitude symbol
+     """
      match unit:
           case "quecto" | "q":
                return "q"
@@ -150,3 +131,107 @@ def get_order_letter(unit: str, return_mu: bool = False):
                return "R"
           case "quetta" | "Quetta" | "Q":
                return "Q"
+
+
+def magnitude_conversion(values, unit_1: str, unit_2: str, reciprocal_units: bool = False):
+     """
+     Convert dataset between two orders of magnitude
+
+     Parameters
+     ----------
+     values : array_like
+         Dataset to be converted
+     unit_1 : str
+         Prefix of order of magnitude that data is in initially
+     unit_2 : str
+         Prefix of order of magnitude that data will be converted to
+     reciprocal_units : bool, optional
+         Set to true if the units of dataset are inverse (per meter for example), by default False
+
+     Returns
+     -------
+     array_like
+         dataset in converted order of magnitude
+     """
+
+     if unit_1 == unit_2:
+          return values
+     else:
+          order_1 = order_of_magnitude(unit_1)
+          order_2 = order_of_magnitude(unit_2)
+
+          if reciprocal_units is True:
+               values_new = (order_2/order_1) * values
+          elif reciprocal_units is False:
+               values_new = (order_1/order_2) * values
+
+          return values_new
+
+def magnitude_conversion_area(values, unit_1: str, unit_2: str, reciprocal_units: bool = False):
+     """
+     Convert dataset between two orders of magnitude with units of area
+
+     Parameters
+     ----------
+     values : array_like
+         Dataset to be converted
+     unit_1 : str
+         Prefix of order of magnitude that data is in initially
+     unit_2 : str
+         Prefix of order of magnitude that data will be converted to
+     reciprocal_units : bool, optional
+         Set to true if the units of dataset are inverse (per meter squared for example), by default False
+
+     Returns
+     -------
+     array_like
+         dataset in converted order of magnitude
+     """
+
+     if unit_1 == unit_2:
+          return values
+     else:
+          order_1 = order_of_magnitude(unit_1)
+          order_2 = order_of_magnitude(unit_2)
+
+          if reciprocal_units is True:
+               values_new = (order_2/order_1)**2 * values
+          elif reciprocal_units is False:
+               values_new = (order_1/order_2)**2 * values
+
+          return values_new     
+
+def magnitude_conversion_vol(values, unit_1: str, unit_2: str, reciprocal_units: bool = False):
+     """
+     Convert dataset between two orders of magnitude with units of volume
+
+     Parameters
+     ----------
+     values : array_like
+         Dataset to be converted
+     unit_1 : str
+         Prefix of order of magnitude that data is in initially
+     unit_2 : str
+         Prefix of order of magnitude that data will be converted to
+     reciprocal_units : bool, optional
+         Set to true if the units of dataset are inverse (per meter cubed for example), by default False
+
+     Returns
+     -------
+     array_like
+         dataset in converted order of magnitude
+     """
+
+     if unit_1 == unit_2:
+          return values
+     else:
+          order_1 = order_of_magnitude(unit_1)
+          order_2 = order_of_magnitude(unit_2)
+
+          if reciprocal_units is True:
+               values_new = (order_2/order_1)**3 * values
+          elif reciprocal_units is False:
+               values_new = (order_1/order_2)**3 * values
+
+          return values_new
+     

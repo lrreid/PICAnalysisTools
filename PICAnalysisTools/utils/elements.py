@@ -1,4 +1,5 @@
 """
+Functions for getting chemical element names, atomic numbers and symbols.
 
 To Do:
     - Add error handeling. What happens if you put in an invalid argument?

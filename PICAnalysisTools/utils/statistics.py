@@ -9,14 +9,50 @@ TO DO:
 
 import numpy as np
 
-def w_std( a, weights ):                               # Define weighted standard deviation calculation
+def w_std( a, weights ):
+    """
+    Calculate the weighted standard deviation of a dataset.
+    Adapted from w_std from openpmd_viewer.addons.pic.lpa_diagnostics
+
+    Parameters
+    ----------
+    a : array_like
+        Calculate the weighted standard deviation for these a.
+
+    weights : array_like
+        An array of weights for the values in a.
+
+     Returns
+     -------
+     average: float
+         Average value of dataset
+    std_dev: float
+        Weighted standard deviation of dataset
+    """
 
     average = np.average(a, weights=weights)
-    variance = np.average((a - average) ** 2, weights=weights)
-    return( average, np.sqrt(variance) )
+    std_dev = np.sqrt(np.average((a - average) ** 2, weights=weights))
+    return average, std_dev
 
 
-def D4S_centroid(image, rtn_int = False): # Find centroid of 2D array using D4-sigma method
+def D4S_centroid(image, rtn_int: bool = False):
+    """
+    Find the coordinates of the centroid of a 2D array according to a D4-sigma method
+
+    Parameters
+    ----------
+    image : ndarray
+        image data
+    rtn_int : bool, optional
+        Round coordinates to closest value and return and integer, by default False
+
+    Returns
+    -------
+    xc: float
+        centroid of data in x coordinate
+    yc: float
+        centroid of data in y coordinate
+    """
     v, h = image.shape
 
     p = np.sum(image)                       # float avoids integer overflow
@@ -30,10 +66,3 @@ def D4S_centroid(image, rtn_int = False): # Find centroid of 2D array using D4-s
         return int(np.round(xc,0)), int(np.round(yc,0))
     else:
         return xc, yc
-
-
-def find_nearest(array, target):
-    # What does this function do if it finds two equally good candidates?
-    array = np.asarray(array)
-    idx = (np.abs(array - target)).argmin()
-    return idx, array[idx]

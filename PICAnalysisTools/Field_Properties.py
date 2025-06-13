@@ -1,13 +1,6 @@
 """
 This file contains functions relevant for analysing the fields in PIC simualtions.
 
-
-Date created: 10/01/2024 @ 22:26
-Authors: Lewis R Reid
-
-Inspiration for this class is "PIC_View_save_ne.py" it is the most
-sophisticated I have in terms of options.
-
 TO DO:
     - Check that the functions I have here can provide the correct information for scripts like "PIC_View_save_Field_plasma_inc_beam_loop.py" which I use a lot.
     - Add options for different normalisations of the z (propagation) axis. To laser centroid, plasma wavelength and edge of simulation box. Other options?
@@ -16,7 +9,8 @@ TO DO:
 import numpy as np
 from scipy.constants import c, e
 from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, magnitude_conversion_vol
-from PICAnalysisTools.utils.statistics import D4S_centroid, find_nearest
+from PICAnalysisTools.utils.statistics import D4S_centroid
+from PICAnalysisTools.utils.rounding import find_nearest
 
 class FieldProperites():
 
