@@ -12,7 +12,7 @@ from PICAnalysisTools.utils.elements import get_element_name
 from PICAnalysisTools.utils.laser_calcs import a0_from_intensity
 from PICAnalysisTools.utils.unit_conversions import magnitude_conversion_area
 
-def read_ionization_energies( element, unit="eV" ):
+def read_ionization_energies( element: str, unit: str = "eV" ):
     """
     Read the ionization energies from a data file
 
@@ -28,8 +28,10 @@ def read_ionization_energies( element, unit="eV" ):
 
     Returns
     -------
-    An array with one array element per ionization state, containing the
-    ionization energy in Joules.
+    energies: array_like
+        Ionisation potentials of each electron in chosen atom
+    ion_charge: float
+        Ion charge state corresponding to each ionisation energy
     """
     # Open and read the file atomic_data.txt
     filename = os.path.join( os.path.dirname(__file__), 'atomic_data.txt' )
@@ -76,37 +78,36 @@ def read_ionization_energies( element, unit="eV" ):
     return( energies, ion_charge )
 
 
-def ionisation_intensity_theshold(element, lambda0=800, wavelength_unit="nano", int_unit="centi"):
+def ionisation_intensity_theshold(element: str, lambda0: float = 800, wavelength_unit: str = "nano", int_unit: str = "centi"):
     """
-    
+    Calculate the threshold laser intensity to ionise electrons off atoms
+
     Parameters
     ----------
-    element: string
-        The atomic name, symbol or atimic number of the considered ionizable species
-        
+    element: str
+        The atomic name, symbol or atomic number of the considered ionizable species.
     lambda0: float
-        wavelength of laser radiation. Used to find a0 equivalent to intensity (m)
+        central wavelength of laser radiation. Used to find a0 equivalent to intensity, by default "nano"
+    wavelength_unit : str, optional
+        Order of magnitude of wavelength unit, by default "nano"
+    int_unit : str, optional
+        Order of magnitude of laser intensity unit, by default "centi"
 
     Returns
     -------
-    Int : float
-        Laser intensity threshold for over the barrier ionisation.
-        Unit: Wcm-2
-    a0  : float
-        Normalised laser vector potential
-        Unit: dimentionless
     element_name: string
         Full name of chosen element.
-
+    Int : float
+        Laser intensity threshold for over the barrier ionisation. Default unit: Wcm^-2
+    a0  : float
+        Normalised laser vector potential. Unit: dimentionless
     """
 
-    element_name = get_element_name(element)       # Get element name from symbol
-    
-    Ip, ion_q = read_ionization_energies( element_name[2], unit="eV" )
+    element_name = get_element_name(str(element))       # Get element name from symbol
+    Ip, ion_q    = read_ionization_energies( element_name[2], unit = "eV" )
     
     Z   = ion_q + 1                                                         # final charge state of the ion
     Int = ((pi**2 * c * epsilon_0**3 * (Ip*e)**4) / (2* Z**2 * e**6) )      # intensity Wm^-2
     a0  = a0_from_intensity(Int, lambda0=lambda0, int_unit="", wavelength_unit=wavelength_unit)
-    
     
     return element_name[1], magnitude_conversion_area(Int, "", int_unit, reciprocal_units = True), a0

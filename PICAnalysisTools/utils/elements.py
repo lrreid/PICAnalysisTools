@@ -11,18 +11,20 @@ import os
 from numpy import array, where
 from csv import reader
 
-def get_element_name(element):
+def get_element_name(element: str):
     """
     Get the name, atomic number and symbol for a given chemical element.
+    Data taken from chemical_element_list.txt
 
     Parameters
     ----------
     element : String
         Atomic number, name or symbol for chemical element.
+        If using atomic number, it is automatically converted to a string.
 
     Returns
     -------
-    atomic_number : String
+    atomic_number : float
         Atomic number corresponding to chosen element.
     name : String
         Name of chosen element.
@@ -36,7 +38,7 @@ def get_element_name(element):
     with open(filename, 'r') as f:
         csv_data = array([l for l in reader(f, delimiter='\t', skipinitialspace=True)])
     
-    index         = where(csv_data == element)[0][0] # Get the row number which matches the chosen element
+    index         = where(csv_data == str(element))[0][0] # Get the row number which matches the chosen element
     atomic_number = csv_data[index,0]
     name          = csv_data[index,1]
     symbol        = csv_data[index,2]
