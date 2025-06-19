@@ -32,7 +32,7 @@ def radial_selection(R_Select_min, R_Select_max, x, y, z, ux, uy, uz, w):
     uz : array_like
         z-coordinates of particle momenta (pz/mc)
     w : array_like
-        Macroparticle weight
+        Macroparticle weights
 
     Returns
     -------

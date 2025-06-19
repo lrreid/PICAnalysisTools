@@ -1,10 +1,6 @@
 """
 This file contains functions relevant for analysing the particles in PIC simualtions.
 
-
-Date created: 05/01/2024
-Authors: Lewis R Reid
-
 TO DO:
     - Take lineouts of histograms (summed and line) should be their own function/class
     - Shift x, z, time axis to centre of beam should be its own function
@@ -19,31 +15,25 @@ from PICAnalysisTools.utils import binning, statistics, rounding
 
 
 class ParticleEnergy():
-    # you should put types in here:  eg ux: float
+
     def __init__(self, ux, uy, uz, q, w, energy_unit: str = "mega", charge_unit: str = "pico"):
         """
         Parameters
         ----------
-        ux: float
-            Particle momenta in x.
-        uy: float
-            Particle momenta in y.
-        uz: float
-            Particle momenta in z.
+        ux : array_like
+            x-coordinates of particle momenta (px/mc)
+        uy : array_like
+            y-coordinates of particle momenta (py/mc)
+        uz : array_like
+            z-coordinates of particle momenta (pz/mc)
         q: float
             particle charge (C).
-        w: float
-            particle weights.
+        w : array_like
+            Macroparticle weights
         energy_unit: string
-            Order of magnitude of particle energy units
+            Order of magnitude of particle energy units, by default "mega"
         charge_unit: string
-            Order of magnitude of particle charge units
-        Ek: float
-            Energy of each macroparticle (default: MeV)
-
-        Returns
-        -------
-        None.
+            Order of magnitude of particle charge units, by default "pico"
         """
         
         self.ux = ux
@@ -63,7 +53,7 @@ class ParticleEnergy():
         Returns
         -------
         Ek_converted: float
-            Energy of each beam macroparticles (MeV).
+            Energy of each beam macroparticles. Default unit: MeV.
         """
         
         gamma  = np.sqrt(1 + self.ux ** 2 + self.uy ** 2 + self.uz ** 2)        # Get weighted average of the normalised momenta of each macroparticle
@@ -77,7 +67,7 @@ class ParticleEnergy():
         Returns
         -------
         charge: float
-            Total beam charge (C).
+            Total beam charge. Default unit: pC.
         """
 
         charge = -1*np.sum(self.w * self.q)                               # Calculate charge (C) within selection
@@ -87,57 +77,39 @@ class ParticleEnergy():
 
     def get_energy_spectrum(self, Spec_Res, E_Round):
         """
+        Get the energy spectrum of the particle species
+
         Parameters
         ----------
-        Spec_Res: float
-            Resolution of histogram.
-        E_Round: float
-            Rounding value for max/min energy.
+        Spec_Res : float
+            Resolution of histogram. Units in eV with order of magnitude energy_unit.
+        E_Round : float
+            Rounding value to determine max & min energy histogram bin.
 
         Returns
         -------
-        e_spec: tuple
-            Particle species energy spectra [0] - number of electrons. [1] - particle energy.
-        Spec_Min: int
-            Minimumum energy of histogram.
-        Spec_Max: int
-            Maximum energy of histogram.
-        E_Bins: TYPE
-            Energy bins of histogram.
-        """
-
-        ## TO THINK: 
-        """
-        If the energy spec is NOT a partical energy property - use a separate class eg:
-        class energy_spec:
-            def __init__(self, the thimgs you need):
-                self.e_spec, self.Spec_Min, self.Spec_Max, self.E_Bins = self._some_function(Ek, Spec_Res, E_Round)
-
-            def _some+function(self):
-            ......
-        
-            in your main code somewhere
-         you have this PE class
-
-         spec = energy_spec(PE.Ek, spec_res, e_round, PE.w)
-
-         now spec has spec.SpecMin 
-
+        energy_spec: tuple
+            [0] - Energy bins of the histogram. [1] - Number of electrons in each energy bin
+        energy_limits: list
+            List containing the maximum and minimum particle energy bins. 
         """
 
         Spec_Min, Spec_Max, E_Bins = binning.get_bins(self.Ek, Spec_Res, E_Round)
-        e_spec                     = np.histogram(self.Ek, bins=E_Bins, weights=self.w)            # Spectrum with resolution Spec_Res
+        energy_hist                = np.histogram(self.Ek, bins=E_Bins, weights=self.w)            # Spectrum with resolution Spec_Res
+        energy_spec                = (E_Bins, (np.append(energy_hist[0], 0)))                      # Tuple with histogram bins and and number of particles per bin. Extra zero to ensure arrays are the same length
 
-        return e_spec, Spec_Min, Spec_Max, E_Bins
+        return energy_spec, [Spec_Min, Spec_Max]
     
     def beam_energy_properties(self):
         """
+        Get statistical properties of particle species
+
         Returns
         -------
         Ek_mean: float
-            Average particle energy (MeV).
+            Average particle energy. Default unit: MeV
         de_rms: float
-            RMS energy spread from statistical calculation (MeV).
+            RMS energy spread from statistical calculation. Default unit: MeV
         PC_spread: float
             Percentage RMS energy spread.
         """
@@ -152,25 +124,28 @@ class ParticleTransverseProperties:
 
     def __init__(self, r, ur, z, uz, w, r_unit: str = "micro", div_unit: str = "milli", emit_unit: str = "micro"):
         """
+        Class to calculate transverse properties of a particle species
+
         Parameters
         ----------
-        r: float
-            Particle positions (m).
-        ur: float
-            Particle momenta.
-        z: float
-            Particle positions in z axis (m).
-        uz: float
-            Particle momenta in z axis.
-        w: float
-            particle weights.
-        r_unit: string
-            order of magnitude to return values.
-
-        Returns
-        -------
-        None.
+        r : array_like
+            Particle positions. Could be x, y or r. (m).
+        ur : array_like
+            Particle momenta. Could be ux, uy or ur to match positions. (pr/mc)
+        z : array_like
+            z-coordinates of particle positions (m)
+        uz : array_like
+            z-coordinates of particle momenta (pz/mc)
+        w : array_like
+            Macroparticle weights
+        r_unit : str, optional
+            Order of magnitude of beam size unit, by default "micro"
+        div_unit : str, optional
+            Order of magnitude of divergence unit, by default "milli"
+        emit_unit : str, optional
+            Order of magnitude of emittance unit, by default "micro"
         """
+
         self.r  = r
         self.ur = ur
         self.z  = z
@@ -183,6 +158,14 @@ class ParticleTransverseProperties:
         self.beam_z    = self.beam_length()
     
     def beam_length(self):
+        """
+        Calculate the length of the particle beam
+
+        Returns
+        -------
+        beam_z: float
+            RMS longitudinal length of particle beam. Default unit: microns
+        """
         z_mean        = np.average( self.z, weights=self.w)
         z2_mean       = np.average( ((self.z-z_mean)**2), weights=self.w)
         beam_z        = (np.sqrt( np.abs(z2_mean)))         # beam size (m)
@@ -190,6 +173,24 @@ class ParticleTransverseProperties:
         return magnitude_conversion(beam_z, "", self.r_unit)
 
     def transverse_beam_properties(self):
+        """
+        Calculate transverse properties of particle species
+
+        Returns
+        -------
+        beam_r: float
+            RMS transverse length of particle beam. Default unit: microns
+        div_r: float
+            Divergence of particle beam. Default unit: mrad
+        eta_tr_norm_r: float
+            Normalised emittance of particle beam. mm mrad
+        Twiss_alpha: float
+            Twiss alpha parameter of particle beam. Dimensionless
+        Twiss_beta: float
+            Twiss beta parameter of particle beam. Unit: m
+        Twiss_gamma: float
+            Twiss gamma parameter of particle beam. Unit: 1/m
+        """
         r_prime       = np.arctan2(self.ur, self.uz)                                    # Get divergence in r (rad)
         _, div_r      = statistics.w_std( np.arctan2(self.ur, self.uz), self.w )        # Get whole beam divergence in r (rad)
 
@@ -215,29 +216,34 @@ class PhaseSpace():
     
     def __init__(self, x, y, z, ux, uy, uz, w, r_unit: str = "micro", energy_unit: str = "mega", div_unit: str = "milli", time_unit: str = "femto"):
         """
+        Calculate various phase space distributions of a particle beam species.
+
         Parameters
         ----------
-        x: float
-            Particle positions in x (m).
-        y: float
-            Particle positions in y (m).
-        z: float
-            Particle positions in z (m).
-        ux: float
-            Particle momenta in x.
-        uy: float
-            Particle momenta in y.
-        uz: float
-            Particle momenta in z.
-        w: float
-            particle weights.
-        Ek: float
-            Energy of each macroparticle (default: MeV)
-
-        Returns
-        -------
-        None.
+        x : array_like
+            x-coordinates of particle positions (m)
+        y : array_like
+            y-coordinates of particle positions (m)
+        z : array_like
+            z-coordinates of particle positions (m)
+        ux : array_like
+            x-coordinates of particle momenta (px/mc)
+        uy : array_like
+            y-coordinates of particle momenta (py/mc)
+        uz : array_like
+            z-coordinates of particle momenta (pz/mc)
+        w : array_like
+            Macroparticle weights
+        r_unit : str, optional
+            Order of magnitude of beam size unit, by default "micro"
+        energy_unit: string
+            Order of magnitude of particle energy units, by default "mega"
+        div_unit : str, optional
+            Order of magnitude of divergence unit, by default "milli"
+        time_unit : str, optional
+            Order of magnitude of time unit, by default "femto"
         """
+
         self.x  = x
         self.y  = y
         self.z  = z
@@ -258,7 +264,7 @@ class PhaseSpace():
         Returns
         -------
         Ek_converted: float
-            Energy of each beam macroparticles (default: MeV).
+            Energy of each beam macroparticles. Default unit: MeV.
         """
         
         gamma  = np.sqrt(1 + self.ux ** 2 + self.uy ** 2 + self.uz ** 2)        # Get weighted average of the normalised momenta of each macroparticle
@@ -267,7 +273,20 @@ class PhaseSpace():
         return magnitude_conversion(Ek, "", self.energy_unit)
 
 
-    def get_divergence(self, Coord = 'x'):
+    def get_divergence(self, Coord: str = 'x'):
+        """
+        Get particle species divergence in a given axis. Calculates divergence of each individial macroparticle, not the mean of all particles.
+
+        Parameters
+        ----------
+        Coord : str, optional
+            Coordinate of the particle species that the divergence will be calculated for, by default 'x'
+
+        Returns
+        -------
+        Div_r: array_like
+            Array of divegence of each beam macroparticle. Default unit: mrad.
+        """
 
         if Coord == 'x':
             Div_r = np.arctan2(self.ux, self.uz)                            # Get divergence in x (rad)
@@ -280,6 +299,53 @@ class PhaseSpace():
         return magnitude_conversion(Div_r, "", self.div_unit)
 
     def Energy_z_space(self, z_res, z_round, Spec_Res, E_Round, Centre_z: bool = True, Find_Lineouts: bool = True, lineout_height=0.2):
+        """
+        Calculate the longitudinal phase / energy space with options for lineouts for plotting.
+
+        This function needs work. I don't like the number of returns being different for different options being chosen.
+        Should Z_Bins and Z_line be a single return? What is the difference between them?
+        Combine Spec_Min, Spec_Max, z_min, z_max together to something like an imshow_extent. I do this in BeamProjection.
+
+        Parameters
+        ----------
+        z_res : float
+            Restolution of histogram binning in z-axis. Default unit: microns
+        z_round : float
+            Rounding value for z-axis to determine max & min z histogram bin. Default unit: microns
+        Spec_Res : float
+            Restolution of histogram binning in particle energy axis. Default unit: MeV.
+        E_Round : _type_
+            Rounding value to determine max & min energy histogram bin. Default unit: MeV.
+        Centre_z : bool, optional
+            Option to centre the beam on z = 0, by default True
+        Find_Lineouts : bool, optional
+            Option to calculate lineouts of the phase space of both axes, by default True
+        lineout_height : float, optional
+            Height of lineout relative to the plot axes limits, by default 0.2
+
+        Returns
+        -------
+        E_Phase: array_like
+            The bi-dimensional histogram of samples z and energy. Values in z are histogrammed along the first dimension and values in energy are histogrammed along the second dimension.
+        Spec_Min: float
+            Minimum bin value of energy axis
+        Spec_Max: float
+            Maximum bin value of energy axis
+        E_Bins: array_like
+            Array containing histogram bins of energy axis
+        z_min: float
+            Minimum bin value of z axis
+        z_max
+            Maximum bin value of z axis
+        Z_Bins
+            Array containing histogram bins of z axis
+        Row_sum: array_like
+            Lineout of phase space data in z axis
+        Z_line: array_like
+            Array containing histogram bins of z axis with normalisation if True
+        Col_sum: array_like
+            Lineout of phase space data in energy axis
+        """
 
         Spec_Min, Spec_Max, E_Bins = binning.get_bins(self.Ek, Spec_Res, E_Round)
 
@@ -392,13 +458,22 @@ class PhaseSpace():
 
 class BeamProjection():
 
-    """
-    TO DO:
-        - create option (or second function) for the binning to cover the whole simulation window, not just around the beam limits.
-        - What is the most efficient way to get simulation window limits?
-    """
-
     def __init__(self, a, b, w, r_unit = "micro"):
+        """
+        Calculate 2D histograms of beam projections
+
+        Parameters
+        ----------
+        a : array_like
+            Particle positions in axis a. Could be x, y, z, r (m)
+        b : array_like
+            Particle positions in axis b. Could be x, y, z, r (m)
+        w : array_like
+            Macroparticle weights
+        r_unit : str, optional
+            Order of magnitude of particle positions when returned, by default "micro"
+        """
+
         self.a = a
         self.b = b
         self.w = w
@@ -407,11 +482,40 @@ class BeamProjection():
         self.b_converted  = magnitude_conversion(self.b, "", self.r_unit)
 
     def beam_projection(self, r_res, r_round, independant_bins=False, equal_bins=False):
-        # independant is good for x vs z (or y vs z)
-        # global is good for x vs y
+        """
+        Calculate 2D histograms of beam projection.
 
-        # equal_bins=False best for for x vs z (or y vs z)
-        # equal_bins=True for x vs y
+        To Do:
+            - It would be nice to separate out equal_bins for the two axes.
+            - equal_bins isn't a name where it is obvious what is does. It should be changed.
+
+        Parameters
+        ----------
+        r_res : float
+            Resolution of histogram bins. Default unit: microns
+        r_round : float
+            Rounding value for axes to determine max & min histogram bins in each axis. Default unit: microns
+        independant_bins : bool, optional
+            If true then the historam limits and bin values in the a and b axes are allowed to different.
+            If false then the historam limits and bin values are the same for the a and b axes.
+            Independant is good for x vs z (or y vs z) and global is good for x vs y.
+            Default: False
+        equal_bins : bool, optional
+            If true then bin_min = -1*bin_max for both the a and b axes
+            If false then bin_min and bin_max are automatically found using the data and rounding values
+            Default: False
+
+        Returns
+        -------
+        projection: array_like
+            The bi-dimensional histogram of samples a and b. Values in a are histogrammed along the first dimension and values in b are histogrammed along the second dimension.
+        plt_limits: array
+            Max and min histogram bins for both axes, can be used for plot axes limits. [A_min, A_max, B_min, B_max].
+        A_Bins: array_like
+            Histogram bins in a-axis
+        B_Bins: array_like
+            Histogram bins in b-axis
+        """
 
         if independant_bins is True:
             
@@ -438,8 +542,26 @@ class BeamProjection():
             return projection, [r_min, r_max, r_min, r_max], R_Bins, R_Bins
         
     def beam_projection_fixed_window(self, window_extent, r_res):
-        # Calculate beam projection with user defined histogram limits.
-        # Useful for calcuating beam projection with whole simulation box view.
+        """
+        Calculate beam projection with user defined histogram limits.
+        Useful for calcuating beam projection with whole simulation box view.
+
+        Parameters
+        ----------
+        window_extent : array
+            Array containing limits of histogram bins. [A_min, A_max, B_min, B_max].
+        r_res : float
+            Resolution of histogram bins. Default unit: microns
+
+        Returns
+        -------
+        projection: array_like
+            The bi-dimensional histogram of samples a and b. Values in a are histogrammed along the first dimension and values in b are histogrammed along the second dimension.
+        A_Bins: array_like
+            Histogram bins in a-axis
+        B_Bins: array_like
+            Histogram bins in b-axis
+        """
 
         A_Bins = np.arange(window_extent[0], window_extent[1]+r_res, r_res)
         B_Bins = np.arange(window_extent[2], window_extent[3]+r_res, r_res)
@@ -449,8 +571,22 @@ class BeamProjection():
         return projection, A_Bins, B_Bins
     
 
-
 def get_normalised_momentum(energy, energy_unit: str = "Mega"):
+    """
+    Calculate the normalised momenta for a given electron energy
+
+    Parameters
+    ----------
+    energy : float
+        Electron energy. Default unit: MeV
+    energy_unit : str, optional
+        Order of magnitude of electron energy unit, by default "Mega"
+
+    Returns
+    -------
+    energy_norm: float
+        normalised electron energy
+    """
 
     elec_rest_mass = (m_e*c**2)/e                   # Electron rest mass (eV)
     energy_eV      = magnitude_conversion(energy, energy_unit, "")

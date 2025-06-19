@@ -1,17 +1,12 @@
 """
 Test that ParticleEnergy and ParticleTransverseProperties classes functions as intended.
-
 To use, you must set your own FolderPath, Simulation and Species to simulaton data which includes a particle species.
-
-TO DO:
-    - Add plotting for phase space. Make sure these functions work. 
-
 """
 
 import matplotlib.pyplot as plt
-from scipy.constants import c, e, m_e
+from scipy.constants import c
 from openpmd_viewer import OpenPMDTimeSeries        # This should be used for pmd viewer version 1.x.
-from PICAnalysisTools.Particle_Properties import ParticleEnergy, ParticleTransverseProperties
+from PICAnalysisTools.Particle_Properties import ParticleEnergy, ParticleTransverseProperties, get_normalised_momentum
 from PICAnalysisTools.utils.sim_path import set_sim_path
 from PICAnalysisTools.utils.plot_limits import plt_limits_log
 
@@ -22,8 +17,8 @@ fsize = 12
 
 #%% Read data from files
 
-FolderPath = r'/home/lewis'
-# FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools\PICAnalysisTools'
+# FolderPath = r'/home/lewis'
+FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools\PICAnalysisTools'
 Simulation = 'example_data'
 Species    = "electrons"
 
@@ -33,15 +28,13 @@ ts   = OpenPMDTimeSeries(FilePath)
 K    = 2                                       # snapshot to analyse
 ctau = round(ts.t[K]*c*1e3,2)
 
-
-elec_rest_mass     = (m_e*c**2)/e                   # Electron rest mass (eV)
-bunch_thresh       = 600e6                            # Threshold for including electrons in particle diagnostic (eV)
-bunch_thresh_norm  = bunch_thresh/elec_rest_mass    # Threshold for including electrons in particle diagnostic (normalised units)
+bunch_thresh_MeV  = 600                                                     # Threshold for including electrons in particle diagnostic (MeV)
+bunch_thresh_norm = get_normalised_momentum(bunch_thresh_MeV, "mega")       # Threshold for including electrons in particle diagnostic (normalised units)
 
 x, y, z, ux, uy, uz, q, w = ts.get_particle( ['x', 'y', 'z', 'ux', 'uy', 'uz', 'charge', 'w'], species=Species,
                                             iteration=ts.iterations[K], plot=False, select = {'uz':[bunch_thresh_norm, None] } )
 
-PE = ParticleEnergy(ux, uy, uz, q, w, energy_unit = "Mega", charge_unit = "pico") # Create instance of class
+PE = ParticleEnergy(ux, uy, uz, q, w, energy_unit = "Mega", charge_unit = "pico") # Create instance of Particle energy class
 
 #%% Test beam energy properties
 
@@ -53,11 +46,11 @@ print("Total charge: %0.2f pC" % round(PE.charge,2) )
 
 #%% Plot beam energy spectrum
 
-e_spec, Spec_Min, Spec_Max, E_Bins = PE.get_energy_spectrum(Spec_Res =  0.2, E_Round =  10)
-plt_y_min, plt_y_max               = plt_limits_log(e_spec[0], max_offset = -1)
+e_spec, [Spec_Min, Spec_Max] = PE.get_energy_spectrum(Spec_Res =  0.2, E_Round =  10) # Units match energy_unit of the instance of the Particle energy class
+plt_y_min, plt_y_max         = plt_limits_log(e_spec[1], max_offset = -1)
 
 fig, ax = plt.subplots()
-plt.plot(E_Bins[:-1], e_spec[0], '-', color='firebrick', linewidth=1.0)
+plt.plot(e_spec[0], e_spec[1], '-', color='firebrick', linewidth=1.0)
 plt.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
 plt.axis([Spec_Min, Spec_Max, plt_y_min, plt_y_max ])
 ax.set_title(('c$\\tau$ = %0.2f mm' % ctau ), fontsize=fsize)
@@ -65,7 +58,6 @@ ax.set_xlabel('Beam energy (MeV)', fontsize=fsize)
 ax.set_ylabel('Number of electrons', fontsize=fsize)
 plt.grid(True)
 plt.show()
-
 
 #%% Create class for transverse particle properties in x and y
 

@@ -1,16 +1,5 @@
 """
-
 Simple plasma calculations and conversions
-
-TO DO:
-    - All functions need tested!
-    - Add doc strings
-    - Add lwfa scalings? separate script?
-
-    
-Calculations for plasma wavelength, skin depth, frequency and angular frequency are all wrong. 
-Numbers are correct but order of magnitude is not. Think this is an error in the unit conversion function!
-
 """
 
 import numpy as np

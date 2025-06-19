@@ -10,13 +10,13 @@ TO DO:
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.constants import c, e, m_e
+from scipy.constants import c
 from openpmd_viewer import OpenPMDTimeSeries        # This should be used for pmd viewer version 1.x.
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import FormatStrFormatter
 
 from PICAnalysisTools.utils.white_background_colormap import cmap_white
-from PICAnalysisTools.Particle_Properties import PhaseSpace, BeamProjection
+from PICAnalysisTools.Particle_Properties import PhaseSpace, BeamProjection, get_normalised_momentum
 from PICAnalysisTools.utils.particle_selection import radial_selection
 from PICAnalysisTools.utils.sim_path import set_sim_path
 from PICAnalysisTools.utils.plot_limits import plt_limits_log
@@ -40,9 +40,8 @@ ts = OpenPMDTimeSeries(FilePath, check_all_files=False, backend='h5py')
 
 K = 2               # snapshot to analyse
 
-elec_rest_mass     = (m_e*c**2)/e                   # Electron rest mass (eV)
-bunch_thresh       = 600e6                            # Threshold for including electrons in particle diagnostic (eV)
-bunch_thresh_norm  = bunch_thresh/elec_rest_mass    # Threshold for including electrons in particle diagnostic (normalised units)
+bunch_thresh_MeV  = 600                                                     # Threshold for including electrons in particle diagnostic (MeV)
+bunch_thresh_norm = get_normalised_momentum(bunch_thresh_MeV, "mega")       # Threshold for including electrons in particle diagnostic (normalised units)
 
 _, info_Ex = ts.get_field( iteration=ts.iterations[K], field = 'E', m=1, coord = 'x')
 

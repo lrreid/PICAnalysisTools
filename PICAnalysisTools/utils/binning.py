@@ -7,7 +7,7 @@ import numpy as np
 from PICAnalysisTools.utils.rounding import roundup, rounddn
 
 def get_bins(array, bin_res, bin_round):
-    """_summary_
+    """
     Get numpy array of containing bins to be used for creating histograms of data.
 
     Parameters
