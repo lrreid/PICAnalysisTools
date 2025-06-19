@@ -41,6 +41,24 @@ def rounddn(x,n):
     return int(np.floor(x / n)) * n
 
 
+def round_nearest(x, n):
+    """
+    Round a number to the closest value of n
+
+    Parameters
+    ----------
+    x : float
+        Number that you want to appy rounding to
+    n : float
+        Value that you want to round to
+
+    Returns
+    -------
+    float
+        x rounded to the closest value of n
+    """
+    return n * np.round(x/n)
+
 def normalise(array):
     """
     Normalise a dataset

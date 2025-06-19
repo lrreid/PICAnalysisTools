@@ -57,24 +57,22 @@ ctau = round(ts.t[K]*c*1e3,2)
 
 Phase_Space = PhaseSpace(x, y, z, ux, uy, uz, w, r_unit = "micro", energy_unit= "mega", div_unit= "milli", time_unit= "femto")      # Create instance of transverse phase space class
 
-E_Phase, Spec_Min, Spec_Max, E_Bins, r_min, r_max, R_Bins, Row_sum, Z_line, Col_sum = Phase_Space.Energy_z_space(z_res=0.1, z_round=5, Spec_Res=0.2, E_Round=50,
-                                                                                                                        Centre_z=True, Find_Lineouts=True, lineout_height=0.2)
+E_Phase, plt_limits, E_Bins, R_Bins, Energy_line, z_line = Phase_Space.Energy_z_space(z_res=0.1, z_round=5, Spec_Res=0.2, E_Round=50, Centre_z=True, lineout_height=0.2)
 
 fig1, ax1 = plt.subplots()
-plt.imshow(np.flipud(E_Phase), cmap=cmap_white(plt.cm.inferno), extent=([r_min, r_max, Spec_Min, Spec_Max]), aspect='auto', norm=LogNorm())
-plt.colorbar().set_label(label='Number of electrons',size=fsize)
+plt.imshow(E_Phase, cmap=cmap_white(plt.cm.inferno), extent=(plt_limits), aspect='auto', norm=LogNorm())
+plt.colorbar().set_label(label='Number of electrons', size=fsize)
 plt.clim(plt_limits_log(E_Phase, min_offset = 0, max_offset = 1))
 
-plt.plot(Row_sum, E_Bins[:-1], color = 'blue', linewidth = 1)
-plt.plot(Z_line[:-1], Col_sum, color = 'blue', linewidth = 1)
+plt.plot(Energy_line, E_Bins, color = 'blue', linewidth = 0.5)
+plt.plot(R_Bins, z_line, color = 'blue', linewidth = 0.5)
 
 ax1.xaxis.set_major_formatter(FormatStrFormatter('%.0f'))
 ax1.set_title("c$\\tau$ = %0.2f mm" % round(ctau,2), fontsize=fsize)
 ax1.set_xlabel('z ($\\mu$m)', fontsize=fsize)
 ax1.set_ylabel('E (MeV)', fontsize=fsize)
-plt.axis([r_min, r_max, Spec_Min, Spec_Max])
+plt.axis(plt_limits)
 plt.show()
-
 
 #%% Energy time space
 

@@ -12,7 +12,7 @@ import numpy as np
 from scipy.constants import c, m_e, e
 from PICAnalysisTools.utils.unit_conversions import magnitude_conversion
 from PICAnalysisTools.utils import binning, statistics, rounding
-
+from PICAnalysisTools.utils.statistics import w_std
 
 class ParticleEnergy():
 
@@ -298,13 +298,9 @@ class PhaseSpace():
 
         return magnitude_conversion(Div_r, "", self.div_unit)
 
-    def Energy_z_space(self, z_res, z_round, Spec_Res, E_Round, Centre_z: bool = True, Find_Lineouts: bool = True, lineout_height=0.2):
+    def Energy_z_space(self, z_res, z_round, Spec_Res, E_Round, Centre_z: bool = True, lineout_height=0.2):
         """
         Calculate the longitudinal phase / energy space with options for lineouts for plotting.
-
-        This function needs work. I don't like the number of returns being different for different options being chosen.
-        Should Z_Bins and Z_line be a single return? What is the difference between them?
-        Combine Spec_Min, Spec_Max, z_min, z_max together to something like an imshow_extent. I do this in BeamProjection.
 
         Parameters
         ----------
@@ -318,8 +314,6 @@ class PhaseSpace():
             Rounding value to determine max & min energy histogram bin. Default unit: MeV.
         Centre_z : bool, optional
             Option to centre the beam on z = 0, by default True
-        Find_Lineouts : bool, optional
-            Option to calculate lineouts of the phase space of both axes, by default True
         lineout_height : float, optional
             Height of lineout relative to the plot axes limits, by default 0.2
 
@@ -327,62 +321,42 @@ class PhaseSpace():
         -------
         E_Phase: array_like
             The bi-dimensional histogram of samples z and energy. Values in z are histogrammed along the first dimension and values in energy are histogrammed along the second dimension.
-        Spec_Min: float
-            Minimum bin value of energy axis
-        Spec_Max: float
-            Maximum bin value of energy axis
+        plt_limits: list
+            List containing the maximum and minimum bin values in each axis. Useful for setting plot axes limits.
+            [z_min, z_max, Spec_Min, Spec_Max]
         E_Bins: array_like
             Array containing histogram bins of energy axis
-        z_min: float
-            Minimum bin value of z axis
-        z_max
-            Maximum bin value of z axis
         Z_Bins
             Array containing histogram bins of z axis
-        Row_sum: array_like
-            Lineout of phase space data in z axis
-        Z_line: array_like
-            Array containing histogram bins of z axis with normalisation if True
-        Col_sum: array_like
+        Energy_line: array_like
             Lineout of phase space data in energy axis
+        z_line: array_like
+            Lineout of phase space data in z axis
         """
 
-        Spec_Min, Spec_Max, E_Bins = binning.get_bins(self.Ek, Spec_Res, E_Round)
-
-        z_converted = magnitude_conversion(self.z, "", self.r_unit)
-
-        z_min, z_max, Z_Bins = binning.get_bins(z_converted, z_res, z_round)
-
-        E_Phase, _, _ = np.histogram2d(self.Ek, z_converted, bins=(E_Bins, Z_Bins), weights=self.w )
+        Spec_Min, Spec_Max, E_Bins = binning.get_bins(self.Ek, Spec_Res, E_Round)                                               # Get histogram bins for energy axis
+        z_converted                = magnitude_conversion(self.z, "", self.r_unit)                                              # Convert z-coordinates of macroparticles from meters to chosen order of magnitude
+        z_min, z_max, Z_Bins       = binning.get_bins(z_converted, z_res, z_round)                                              # Get histogram bins for z axis
+        E_Phase                    = np.flipud(np.histogram2d(self.Ek, z_converted, bins=(E_Bins, Z_Bins), weights=self.w )[0]) # flipped so min in y-axis is on the bottom of the plot in imshow, this is opposite to default imshow.
 
         if Centre_z is True:
-            # Set the centre of the beam to r = 0
-            # Particularly useful if plotting z axis.
-            col_sum  = E_Phase.sum(axis=0)                          # Sum all columns of histogram
-            PosZ     = np.argmax(col_sum)                           # Index of maximum value
-            z_at_max = Z_Bins[PosZ] 
+            # Set the centre of the beam to z = 0
+            z_centroid = w_std(Z_Bins, np.append(E_Phase.sum(axis=0), 0))[0]    # Sum all columns of histogram and find statistical centroid of the beam
+            z_at_max   = rounding.round_nearest(z_centroid, z_res)              # Round centroid to the nearest histogram bin
+            z_max      = z_max - z_at_max
+            z_min      = z_min - z_at_max
+            Z_Bins     = Z_Bins - z_at_max                                      # Set centre of beam to z = 0
+                
+        plt_limits = [z_min, z_max, Spec_Min, Spec_Max]
 
-            z_max = z_max - z_at_max
-            z_min = z_min - z_at_max
+        # Calculate lineouts for z and energy axes. Height of the line normalised to the plot limits
+        Ene_height = (Spec_Max-Spec_Min) * lineout_height       # lineout 20% of plot window in height by default
+        R_height   = (z_max - z_min) * lineout_height           # lineout 20% of plot window in height by default
 
-        else:
-            z_at_max = 0
+        Energy_line = np.flip(np.append( (R_height * rounding.normalise(np.sum(E_Phase, axis=1))) + z_min , 0))
+        z_line      = np.append( (Ene_height * rounding.normalise(np.sum(E_Phase, axis=0))) + Spec_Min , 0)
 
-        if Find_Lineouts is True:
-            # Lineout plots are: plt.plot(Row_sum, E_Bins[:-1]) and plt.plot(Z_line[:-1], Col_sum)
-            # I don't like the return having two different lengths. This can't be "good" python. I do want the option for calculating the lineouts
-
-            Ene_height = (Spec_Max-Spec_Min) * lineout_height       # lineout 20% of plot window in height
-            R_height   = (z_max - z_min) * lineout_height
-
-            Row_sum = (R_height * rounding.normalise(np.sum(E_Phase, axis=1))) + (z_min)
-            Z_line  = Z_Bins - z_at_max                                                 # Set centre of beam to z = 0
-            Col_sum = (Ene_height * rounding.normalise(np.sum(E_Phase, axis=0))) + Spec_Min
-
-            return E_Phase, Spec_Min, Spec_Max, E_Bins, z_min, z_max, Z_Bins, Row_sum, Z_line, Col_sum
-
-        else:
-            return E_Phase, Spec_Min, Spec_Max, E_Bins, z_min, z_max, Z_Bins
+        return E_Phase, plt_limits, E_Bins, Z_Bins, Energy_line, z_line
         
 
     def Energy_time_space(self, Spec_Res, E_Round, t_res, t_round, Find_Lineouts: bool = True, lineout_height=0.2):
