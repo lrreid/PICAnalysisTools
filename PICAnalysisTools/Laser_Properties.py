@@ -1,14 +1,6 @@
 """
 This file contains functions for collecting together analysis of laser pulse properties
 
-Authors: Lewis R Reid
-
-This is only compatible with OpenPMD viewer version 1.9.0 or greater.
-
-TO DO:
-    - 
-
-
 Possible change:
     - Add someting like self.laser_tracking = get_laser_properties_loop(SimPath) to the init
     - Then create two new functions for save_txt_files() and save_plts() which call self.laser_tracking
@@ -26,9 +18,35 @@ from PICAnalysisTools.utils.statistics import w_std
 
 class LaserProperties():
 
-    def __init__(self, ts, Coord = "x", Method: str = "fit", Profile_Method: str = "projection", centre_unit: str = "micro", spot_unit: str = "micro", time_unit: str = "femto"):
+    def __init__(self, ts, Coord = "x", Method: str = "fit", Profile_Method: str = "projection", centroid_unit: str = "micro", spot_unit: str = "micro", time_unit: str = "femto"):
+        """
+        Class containing functions to extract properties of the laser field from PIC simulations
+
+        Parameters
+        ----------
+        ts : Object
+            LpaDiagnostics "time series" object.
+        Coord: string, default 'x'
+            Polarization of the field. Options are 'x', 'y'.
+        Method : str, optional
+           The method which is used to compute the waist
+           'fit': Gaussian fit of the transverse profile
+           'rms': RMS radius, weighted by the transverse profile
+           ('rms' tends to give more weight to the "wings" of the pulse)
+           by default "fit"
+        Profile_Method : str, optional
+            Method used to obtain the transverse profile. Options are: 'peak','projection', by default "projection"
+            note this is different to the openPMD viewer default.
+        centroid_unit : str, optional
+            Order of magnitude of units for laser centroid, by default "micro"
+        spot_unit : str, optional
+            Order of magnitude of the laser spot size units, by default "micro"
+        time_unit : str, optional
+            Order of magnitude of pulse duration units, by default "femto"
+        """
+
         self.ts             = ts
-        self.centre_unit    = centre_unit
+        self.centroid_unit  = centroid_unit
         self.spot_unit      = spot_unit
         self.time_unit      = time_unit
         self.Coord          = Coord
@@ -41,32 +59,20 @@ class LaserProperties():
     
         Parameters
         ----------
-        ts: Object
-            LpaDiagnostics "time series" object.
         Snapshot: int
             Snapshot from simulation to be analysed.
-        Coord: string, default 'x'
-            Polarization of the field. Options are 'x', 'y'.
-        method: str, optional, default 'fit'
-           The method which is used to compute the waist
-           'fit': Gaussian fit of the transverse profile
-           'rms': RMS radius, weighted by the transverse profile
-           ('rms' tends to give more weight to the "wings" of the pulse)
 
-        profile_Method: str, optional, default 'projection' ---> note this is different to the openPMD viewer default.
-            Method used to obtain the transverse profile. Options are: 'peak','projection'
     
         Returns
         -------
-        Waist: float
-            laser waist (m).
-        t_FWHM: float
-            laser pulse duration FWHM (s).
-        a0: float
-            Normalised laser vector potential.
         Centroid: float
-            Position of centre of laser pusle (m)
-    
+            Position of laser centroid. Default unit: microns
+        Waist: float
+            laser waist. Default unit: microns
+        t_FWHM: float
+            laser pulse duration FWHM. Default unit: fs
+        a0: float
+            Normalised laser vector potential.    
         '''
 
         Waist        = self.ts.get_laser_waist(iteration = self.ts.iterations[Snapshot], pol=self.Coord, method=self.Method, profile_method=self.Profile_Method) # OpenPMD viewwer defaults are fit and peak. New to version 1.9.0.
@@ -74,12 +80,31 @@ class LaserProperties():
         t_FWHM       = np.sqrt(2*np.log(2))*(Pulse_Length/c)                 # Calculate pulse duration (s)
         a0           = self.ts.get_a0(iteration          = self.ts.iterations[Snapshot], pol=self.Coord)
 
-        Centroid, _ = get_laser_cenroid(self.ts, Snapshot, centroid_unit = self.centre_unit)
+        Centroid, _ = get_laser_cenroid(self.ts, Snapshot, centroid_unit = self.centroid_unit)
 
         return Centroid, a0, magnitude_conversion(Waist, "", self.spot_unit), magnitude_conversion(t_FWHM, "", self.time_unit)
     
 
     def get_laser_properties_loop(self, save_txt: bool = False, Sim_Path=getcwd()):
+        """
+        Loop through all available h5 files and extract laser properties
+
+        Parameters
+        ----------
+        save_txt : bool, optional
+            If true, text file containing will be saved, by default False
+        Sim_Path : str, optional
+            Full path to directory where text file will be saved, by default getcwd()
+
+        Returns
+        -------
+        output: array_like
+            Array containing analysed data.
+            Col 0 - centroid
+            Col 1 - a0
+            Col 2 - waist
+            Col 3 - FWHM pulse duration
+        """
 
         output = np.zeros([len(self.ts.iterations), 4])                                  # Create array of zeros to store analysed data
 
@@ -98,7 +123,7 @@ class LaserProperties():
             if exists(Ana_dir) is False:
                 makedirs(Ana_dir)
 
-            title_centroid = "Centroid (%sm)" % get_order_letter(self.centre_unit)
+            title_centroid = "Centroid (%sm)" % get_order_letter(self.centroid_unit)
             title_a0       = "a0"
             title_spot     = "w0 (%sm)" % get_order_letter(self.spot_unit)
             title_duration = "tau_FWHM (%ss)" % get_order_letter(self.time_unit)
@@ -110,6 +135,23 @@ class LaserProperties():
 
 
 def get_a0_field_map(ts, Snapshot):
+    """
+    Get field map for laser a0
+
+    Parameters
+    ----------
+    ts : Object
+        LpaDiagnostics "time series" object.
+    Snapshot: int
+        Snapshot from simulation to be analysed.
+
+    Returns
+    -------
+    a0_field: array_like
+        2D array containing a0 field
+    a0_max: float
+        Maximum a0 value in snapshot
+    """
 
     central_wavelength, _, _ = get_central_wavelength(ts, Snapshot, m='all', coord='x', wavelength_unit = "" )
 
@@ -121,7 +163,31 @@ def get_a0_field_map(ts, Snapshot):
 
 
 def get_spectrum(ts, snapshot, m: str = 'all', coord: str = 'x', wavelength_unit: str = "nano" ):
-    # Adapted from openpmd_viewer function of the same name
+    """
+    Calculate the laser spectrum from the electric field
+    Adapted from openpmd_viewer function of the same name
+
+    Parameters
+    ----------
+    ts : Object
+        LpaDiagnostics "time series" object.
+    Snapshot: int
+        Snapshot from simulation to be analysed.
+    m : str, optional
+        Azimuthal mode of 2D radial grid, by default 'all'
+        Either 'all' (for the sum of all the modes) or an integer (for the selection of a particular mode)
+    coord : str, optional
+        Coordinate of electric field to analyse, by default 'x'
+    wavelength_unit : str, optional
+        Order of magnitude of wavelength units, by default "nano"
+
+    Returns
+    -------
+    wavelength: array
+        Spectrum data wavelength axis
+    intensity: array
+        Spectrum data in intensitiy axis
+    """
 
     E_field, info_field = ts.get_field( iteration=ts.iterations[snapshot], field='E', m=m, coord=coord)
 
@@ -139,15 +205,60 @@ def get_spectrum(ts, snapshot, m: str = 'all', coord: str = 'x', wavelength_unit
 
 
 def get_central_wavelength(ts, snapshot, m: str = 'all', coord: str = 'x', wavelength_unit: str = "nano" ):
+    """
+    Calculate the central wavelength and width of laser spectrum
+
+    Parameters
+    ----------
+    ts : Object
+        LpaDiagnostics "time series" object.
+    Snapshot: int
+        Snapshot from simulation to be analysed.
+    m : str, optional
+        Azimuthal mode of 2D radial grid, by default 'all'
+        Either 'all' (for the sum of all the modes) or an integer (for the selection of a particular mode)
+    coord : str, optional
+        Coordinate of electric field to analyse, by default 'x'
+    wavelength_unit : str, optional
+        Order of magnitude of wavelength units, by default "nano"
+
+    Returns
+    -------
+    centroid: float
+        centroid wavelength of spectrum. Default unit: nm
+    width: float
+        RMS width of spectrum. Default unit: nm
+    peak: float
+        Wavelength at peak intensity. Default unit: nm
+    """
 
     wavelength, spectrum = get_spectrum(ts=ts, snapshot=snapshot, m=m, coord=coord, wavelength_unit = wavelength_unit)
-    average, width      = w_std(wavelength, spectrum)
-    peak                = wavelength[np.where(spectrum == np.max(spectrum))[0][0]]
+    centroid, width      = w_std(wavelength, spectrum)
+    peak                 = wavelength[np.where(spectrum == np.max(spectrum))[0][0]]
 
-    return average, width, peak
+    return centroid, width, peak
 
 
 def get_laser_cenroid(ts, snapshot, centroid_unit: str = "micro"):
+    """
+    Get position of laser centroid in the longitudinal axis
+
+    Parameters
+    ----------
+    ts : Object
+        LpaDiagnostics "time series" object.
+    Snapshot: int
+        Snapshot from simulation to be analysed.
+    centroid_unit : str, optional
+        Order of magnitude of units for laser centroid, by default "micro"
+
+    Returns
+    -------
+    centroid: float
+        Longitudinal position of laser centroid. Default unit: microns
+    Peak: float
+        Longitudinal position of laser peak intensity. Default unit: microns
+    """
 
     Ex, info_Ex = ts.get_field( iteration=ts.iterations[snapshot], field='E', m=1, coord='x')
     Ex_env      = np.abs(hilbert(Ex[int(len(info_Ex.r)//2),:]))         # Get the laser envelope
