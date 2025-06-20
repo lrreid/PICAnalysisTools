@@ -1,28 +1,33 @@
 """
 Functions for calculating quantities and matching conditions for beam driven wakefield acceleration.
-
 """
 
 import numpy as np
 from scipy.constants import c, e, pi, epsilon_0, m_e
 from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, magnitude_conversion_vol
 
-def resonant_ne(condition, sigmaZ, sigma_unit : str ="micro", den_unit : str = "centi"):
-    '''
+def resonant_ne(condition: str, sigmaZ, sigma_unit: str = "micro", den_unit: str = "centi"):
+    """
+    Calculate the resonant plasma density for beam driven wakefield acceleration
+
     Parameters
     ----------
-    condition : String
+    condition : str
         Condition for choosing plasma density. Choose between
         k_p * sigma_z = sqrt(2)
         k_p * sigma_z = pi/4
     sigmaZ : float
-        RMS longitudial beam length (default: microns)
+        RMS longitudial beam length. Default unit: microns
+    sigma_unit : str, optional
+        Order of magnitude of beam length unit, by default "micro"
+    den_unit : str, optional
+        Order of magnitude of plasma density unit, by default "centi"
 
     Returns
     -------
-    n_e : float
-        Plasma denity (default: cm^-3).
-    '''
+    n_e: float
+        Resonant plasma density for given beam length. Default unit: cm^-3
+    """
     
     sigmaZ_SI = magnitude_conversion(sigmaZ, sigma_unit, "" )
 
@@ -36,22 +41,32 @@ def resonant_ne(condition, sigmaZ, sigma_unit : str ="micro", den_unit : str = "
     
     return magnitude_conversion_vol(n_e, "", den_unit, reciprocal_units = True)
 
-def sigma_matched(Ek, n_e, eta_N, energy_unit  : str = "Mega", den_unit  : str = "centi", emit_unit : str ="micro", sigma_unit : str ="micro"):
-    '''
+def sigma_matched(Ek, n_e, eta_N, energy_unit: str = "Mega", den_unit: str = "centi", emit_unit: str ="micro", sigma_unit: str ="micro"):
+    """
+    Calculate matched transverse beam size for given plasma density.
+
     Parameters
     ----------
     Ek : float
-        Electron central energy (default: MeV).
+        Particle species central energy. Default unit: MeV
     n_e : float
-        Plasma density (default: cm-3).
+        Plasma denstiy. Default unit: cm^-3
     eta_N : float
-        Electron beam normalised emittance (default: mm mrad).
+        Particle species normalised emittance. Default unit:mm mrad.
+    energy_unit : str, optional
+        Order of magnitude of energy unit, by default "Mega"
+    den_unit : str, optional
+        Order of magnitude of plasma density unit, by default "centi"
+    emit_unit : str, optional
+        Order of magnitude of normalised emittance unit, by default "micro"
+    sigma_unit : str, optional
+        Order of magnitude of transverse beam size unit, by default "micro"
 
     Returns
     -------
-    sigma_m : float
-        Matched beam size (default: um).
-    '''
+    sigma_m: float
+        Matched transverse beam size (RMS) to plasma. Default unit: microns
+    """
 
     Ek_SI    = magnitude_conversion(Ek, energy_unit, "" )
     n_e_SI   = magnitude_conversion_vol(n_e, den_unit, "", reciprocal_units = True)
@@ -63,53 +78,65 @@ def sigma_matched(Ek, n_e, eta_N, energy_unit  : str = "Mega", den_unit  : str =
     return magnitude_conversion(sigma_m, "", sigma_unit)
 
 
-def charge_density(sig_r, sig_z, Q, sigma_unit : str ="micro", charge_unit  : str = "pico", den_unit  : str = "centi"):
-    '''
+def charge_density(sig_r, sig_z, Q, sigma_unit: str ="micro", charge_unit: str = "pico", den_unit: str = "centi"):
+    """
+    Calculate the charge density of a particle beam with Gaussian distribution.
+
     Parameters
     ----------
     sig_r : float
-        RMS transverse beam size (default: microns).
+        Transverse beam size (RMS). Default unit: microns
     sig_z : float
-        RMS longitudianl beam size (default: microns).
+        Longitudinal beam size (RMS). Default unit: microns
     Q : float
-        Beam charge (default: pC).
+        Total particle beam charge. Default unit: pC
+    sigma_unit : str, optional
+        Order of magnitude of transverse beam size unit, by default "micro"
+    charge_unit : str, optional
+         Order of magnitude of beam charge unit, by default "pico"
+    den_unit : str, optional
+        Order of magnitude of plasma density unit, by default "centi"
 
     Returns
     -------
-    nb : float
-        Beam charge denstiy (default: cm^-3).
-    '''
+    nb: float
+        Charge density of particle beam. Default unit: cm^-3
+    """
 
     sig_r_SI = magnitude_conversion(sig_r, sigma_unit, "")
     sig_z_SI = magnitude_conversion(sig_z, sigma_unit, "")
     Q_SI     = magnitude_conversion(Q, charge_unit, "")
         
-    nb = (Q_SI*1e-12) / (e * ((2*pi)**(3/2)) * (sig_r_SI)**2  * (sig_z_SI) ) # Beam charge density (cm-3)
+    nb = (Q_SI*1e-12) / (e * ((2*pi)**(3/2)) * (sig_r_SI)**2  * (sig_z_SI) ) # Beam charge density (m-3)
     
     return magnitude_conversion_vol(nb, "", den_unit, reciprocal_units = True)
 
-def sigr_for_nonlinear_thres(sig_z, Q, condition, sigma_unit : str ="micro", charge_unit  : str = "pico"):
-    '''
-    Calculate transverse beam size for nb/ne = 1
+def sigr_for_nonlinear_thres(sig_z, Q, condition, sigma_unit: str ="micro", charge_unit: str = "pico"):
+    """
+    Calculate longitudinal beam size for beam density to match plasma density (nb/ne = 1)
     i.e. Threshold for non-linear regime of pwfa for given
     bunch length and charge.
 
     Parameters
     ----------
     sig_z : float
-        RMS bunch beam length (m).
+        Longitudinal beam size (RMS). Default unit: microns
     Q : float
-        Bunch charge (C).
-    condition : String
+        Total particle beam charge. Default unit: pC
+    condition : str
         Condition for choosing plasma density. Choose between
         k_p * sigma_z = sqrt(2)
-        k_p * sigma_z = pi / 4
+        k_p * sigma_z = pi/4
+    sigma_unit : str, optional
+        Order of magnitude of beam length unit, by default "micro"
+    charge_unit : str, optional
+         Order of magnitude of beam charge unit, by default "pico"
 
     Returns
     -------
-    sig_r : float
-        RMS bunch transverse size (default: microns).
-    '''
+    sig_r: float
+        Transverse beam size which gives nb = ne. Default unit: um
+    """
 
     sig_z_SI = magnitude_conversion(sig_z, sigma_unit, "")
     Q_SI     = magnitude_conversion(Q, charge_unit, "")
@@ -125,28 +152,32 @@ def sigr_for_nonlinear_thres(sig_z, Q, condition, sigma_unit : str ="micro", cha
 
 
 
-def sigz_for_nonlinear_thres(sig_r, Q, condition, sigma_unit : str ="micro", charge_unit  : str = "pico"):
-    '''
-    Calculate longitudinal beam size for nb/ne = 1
+def sigz_for_nonlinear_thres(sig_r, Q, condition, sigma_unit: str ="micro", charge_unit: str = "pico"):
+    """
+    Calculate longitudinal beam size for beam density to match plasma density (nb/ne = 1)
     i.e. Threshold for non-linear regime of pwfa for given
     bunch length and charge.
 
     Parameters
     ----------
     sig_r : float
-        RMS bunch beam transverse size (default: microns).
+        Transverse beam size (RMS). Default unit: microns
     Q : float
-        Bunch charge (default: pC).
-    condition : String
+        Total particle beam charge. Default unit: pC
+    condition : str
         Condition for choosing plasma density. Choose between
         k_p * sigma_z = sqrt(2)
-        k_p * sigma_z = pi / 4
+        k_p * sigma_z = pi/4
+    sigma_unit : str, optional
+        Order of magnitude of beam length unit, by default "micro"
+    charge_unit : str, optional
+         Order of magnitude of beam charge unit, by default "pico"
 
     Returns
     -------
-    sig_z : float
-        RMS bunch longitudinal size (default: microns).
-    '''
+    sig_z: float
+        Longitudinal beam size which gives nb = ne. Default unit: um
+    """
 
     sig_r_SI = magnitude_conversion(sig_r, sigma_unit, "")
     Q_SI     = magnitude_conversion(Q, charge_unit, "")
