@@ -34,7 +34,7 @@ plasma_species = "rho_plasma_elec"
 beam_species   = 'electrons'
 
 # FolderPath = r'/home/lewis'
-FolderPath = r'C:\Users\lewis\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools\PICAnalysisTools'
+FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools\PICAnalysisTools'
 Simulation = 'example_data'
 Ana_name   = 'field_plotting_tests'
 FilePath, SimPath = set_sim_path(FolderPath, Simulation, boosted_frame=False)
@@ -61,16 +61,16 @@ if show_laser_countour is True:
 
 if show_beam is True:
 
-    window_limits = magnitude_conversion(np.array([info_Ex.rmin, info_Ex.rmax, info_Ex.zmin, info_Ex.zmax]), "", "micro")
+    window_limits = magnitude_conversion(np.array([info_Ex.zmin, info_Ex.zmax, info_Ex.rmin, info_Ex.rmax]), "", "micro")
     x, y, z, w    = ts.get_particle( ['x', 'y', 'z', 'w'], species=beam_species, iteration=ts.iterations[K], plot=False)
-    beam_dist     = BeamProjection(x, z, w).beam_projection_fixed_window(window_extent = window_limits, r_res=0.2)
+    beam_dist     = BeamProjection(z, x, w).beam_projection_fixed_window(window_extent = window_limits, r_res=0.2)
 
 
 #%% Take lineouts of field and plot the data
 
 FP = FieldProperites(Ex, info_Ex, z_unit = "micro", r_unit = "micro")               # Create instance of FieldProperties class for laser Ex field
 
-centroid_z, centroid_r, _, _ = FP.find_field_centroid()                             # Find centroid of laser field
+centroid_z, centroid_r, _, _ = FP.find_field_centroid(use_absolute = True)          # Find centroid of laser field
 peak_z, peak_r, _, _         = FP.find_field_max(use_absolute = True)               # Find location of peak of laser field 
 laser_centroid, laser_peak   = get_laser_cenroid(ts, K, centroid_unit = "micro")    # Find centroid of laser in Z axis.
 
