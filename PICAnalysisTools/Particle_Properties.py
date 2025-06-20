@@ -4,7 +4,6 @@ This file contains functions relevant for analysing the particles in PIC simualt
 TO DO:
     - Take lineouts of histograms (summed and line) should be their own function/class
     - Shift x, z, time axis to centre of beam should be its own function
-    - Add type hints to functions int, float, bool, str
 
 """
 
@@ -13,6 +12,7 @@ from scipy.constants import c, m_e, e
 from PICAnalysisTools.utils.unit_conversions import magnitude_conversion
 from PICAnalysisTools.utils import binning, statistics, rounding
 from PICAnalysisTools.utils.statistics import w_std
+elec_rest_mass = (m_e*c**2)/e                   # Electron rest mass (eV)
 
 class ParticleEnergy():
 
@@ -298,9 +298,9 @@ class PhaseSpace():
 
         return magnitude_conversion(Div_r, "", self.div_unit)
 
-    def Energy_z_space(self, z_res, z_round, Spec_Res, E_Round, Centre_z: bool = True, lineout_height=0.2):
+    def Energy_z_space(self, z_res, z_round, Spec_Res, E_Round, Centre_z: bool = True, lineout_height: float = 0.2):
         """
-        Calculate the longitudinal phase / energy space with options for lineouts for plotting.
+        Calculate the longitudinal phase / energy space with lineouts.
 
         Parameters
         ----------
@@ -319,82 +319,147 @@ class PhaseSpace():
 
         Returns
         -------
-        E_Phase: array_like
+        Ez_Phase: array_like
             The bi-dimensional histogram of samples z and energy. Values in z are histogrammed along the first dimension and values in energy are histogrammed along the second dimension.
         plt_limits: list
             List containing the maximum and minimum bin values in each axis. Useful for setting plot axes limits.
             [z_min, z_max, Spec_Min, Spec_Max]
-        E_Bins: array_like
-            Array containing histogram bins of energy axis
         Z_Bins
             Array containing histogram bins of z axis
-        Energy_line: array_like
-            Lineout of phase space data in energy axis
+        E_Bins: array_like
+            Array containing histogram bins of energy axis
         z_line: array_like
             Lineout of phase space data in z axis
+        Energy_line: array_like
+            Lineout of phase space data in energy axis
         """
 
         Spec_Min, Spec_Max, E_Bins = binning.get_bins(self.Ek, Spec_Res, E_Round)                                               # Get histogram bins for energy axis
         z_converted                = magnitude_conversion(self.z, "", self.r_unit)                                              # Convert z-coordinates of macroparticles from meters to chosen order of magnitude
         z_min, z_max, Z_Bins       = binning.get_bins(z_converted, z_res, z_round)                                              # Get histogram bins for z axis
-        E_Phase                    = np.flipud(np.histogram2d(self.Ek, z_converted, bins=(E_Bins, Z_Bins), weights=self.w )[0]) # flipped so min in y-axis is on the bottom of the plot in imshow, this is opposite to default imshow.
+        Ez_Phase                   = np.flipud(np.histogram2d(self.Ek, z_converted, bins=(E_Bins, Z_Bins), weights=self.w )[0]) # flipped so min in y-axis is on the bottom of the plot in imshow, this is opposite to default imshow.
 
         if Centre_z is True:
             # Set the centre of the beam to z = 0
-            z_centroid = w_std(Z_Bins, np.append(E_Phase.sum(axis=0), 0))[0]    # Sum all columns of histogram and find statistical centroid of the beam
+            z_centroid = w_std(Z_Bins, np.append(Ez_Phase.sum(axis=0), 0))[0]    # Sum all columns of histogram and find statistical centroid of the beam
             z_at_max   = rounding.round_nearest(z_centroid, z_res)              # Round centroid to the nearest histogram bin
             z_max      = z_max - z_at_max
             z_min      = z_min - z_at_max
             Z_Bins     = Z_Bins - z_at_max                                      # Set centre of beam to z = 0
-                
+            
         plt_limits = [z_min, z_max, Spec_Min, Spec_Max]
 
         # Calculate lineouts for z and energy axes. Height of the line normalised to the plot limits
         Ene_height = (Spec_Max-Spec_Min) * lineout_height       # lineout 20% of plot window in height by default
         R_height   = (z_max - z_min) * lineout_height           # lineout 20% of plot window in height by default
 
-        Energy_line = np.flip(np.append( (R_height * rounding.normalise(np.sum(E_Phase, axis=1))) + z_min , 0))
-        z_line      = np.append( (Ene_height * rounding.normalise(np.sum(E_Phase, axis=0))) + Spec_Min , 0)
+        Energy_line = np.flip(np.append( (R_height * rounding.normalise(np.sum(Ez_Phase, axis=1))) + z_min , 0))
+        z_line      = np.append( (Ene_height * rounding.normalise(np.sum(Ez_Phase, axis=0))) + Spec_Min , 0)
 
-        return E_Phase, plt_limits, E_Bins, Z_Bins, Energy_line, z_line
+        return Ez_Phase, plt_limits, Z_Bins, E_Bins, z_line, Energy_line
         
 
-    def Energy_time_space(self, Spec_Res, E_Round, t_res, t_round, Find_Lineouts: bool = True, lineout_height=0.2):
+    def Energy_time_space(self, t_res, t_round, Spec_Res, E_Round, Centre_t: bool = True, lineout_height: float = 0.2):
+        """
+        Calculate the longitudinal phase (in time) / energy space with lineouts.
+        
+        TO DO:
+        This is not very robust against the location of t = 0.
+        Should I add an option for a z position offset?
 
-        # Need to add option to make the centre of the beam t = 0. Is it there already and always on as default?
+
+        Parameters
+        ----------
+        t_res : float
+            Restolution of histogram binning in time-axis. Default unit: fs
+        t_round : _type_
+            Rounding value for time-axis to determine max & min t histogram bin. Default unit: fs
+        Spec_Res : float
+            Restolution of histogram binning in particle energy axis. Default unit: MeV.
+        E_Round : _type_
+            Rounding value to determine max & min energy histogram bin. Default unit: MeV.
+        Centre_z : bool, optional
+            Option to centre the beam on z = 0, by default True
+        lineout_height : float, optional
+            Height of lineout relative to the plot axes limits, by default 0.2
+
+        Returns
+        -------
+        Et_Phase: array_like
+            The bi-dimensional histogram of samples time and energy. Values in t are histogrammed along the first dimension and values in energy are histogrammed along the second dimension.
+        plt_limits: list
+            List containing the maximum and minimum bin values in each axis. Useful for setting plot axes limits.
+            [t_min, t_max, Spec_Min, Spec_Max]
+        T_Bins
+            Array containing histogram bins of time axis
+        E_Bins: array_like
+            Array containing histogram bins of energy axis
+        t_line: array_like
+            Lineout of phase space data in time axis
+        Energy_line: array_like
+            Lineout of phase space data in energy axis
+        """
 
         time_data                  = magnitude_conversion((self.z/c), "", self.time_unit)
         t_min, t_max, T_Bins       = binning.get_bins(time_data, t_res, t_round)
         Spec_Min, Spec_Max, E_Bins = binning.get_bins(self.Ek, Spec_Res, E_Round)
+        Et_Phase                   = np.flipud(np.histogram2d(self.Ek, time_data, bins=(E_Bins, T_Bins), weights=self.w )[0]) # flipped so min in y-axis is on the bottom of the plot in imshow, this is opposite to default imshow.
 
-        long_Phase, _, _ = np.histogram2d(self.Ek, time_data, bins=(E_Bins, T_Bins), weights=self.w )
+        if Centre_t is True:
+            # Set the centre of the beam to t = 0
+            z_centroid = w_std(T_Bins, np.append(Et_Phase.sum(axis=0), 0))[0]       # Sum all columns of histogram and find statistical centroid of the beam
+            t_at_max   = rounding.round_nearest(z_centroid, t_res)                  # Round centroid to the nearest histogram bin
+            t_max      = t_max - t_at_max
+            t_min      = t_min - t_at_max
+            T_Bins     = T_Bins - t_at_max                                          # Set centre of beam to t = 0
 
-        # Set the centre of the beam to r = 0
-        # Particularly useful if plotting z axis.
-        col_sum  = long_Phase.sum(axis=0)           # Sum all columns of histogram
-        PosZ     = np.argmax(col_sum)               # Index of maximum value
-        t_at_max = T_Bins[PosZ] 
+        plt_limits = [t_min, t_max, Spec_Min, Spec_Max]
 
-        t_max = t_max - t_at_max
-        t_min = t_min - t_at_max
+        # Calculate lineouts for time and energy axes. Height of the line normalised to the plot limits
+        Ene_height = (Spec_Max-Spec_Min) * lineout_height                       # lineout 20% of plot window in height by default
+        R_height   = (t_max - t_min) * lineout_height                           # lineout 20% of plot window in height by default
 
-        if Find_Lineouts is True:
-            # Lineout plots are: plt.plot(Row_sum, E_Bins[:-1]) and plt.plot(Z_line[:-1], Col_sum)
+        Energy_line = np.flip(np.append( (R_height * rounding.normalise(np.sum(Et_Phase, axis=1))) + t_min , 0))
+        t_line      = np.append( (Ene_height * rounding.normalise(np.sum(Et_Phase, axis=0))) + Spec_Min , 0)
 
-            Ene_height = (Spec_Max-Spec_Min) * lineout_height       # lineout 20% of plot window in height
-            R_height   = (t_max - t_min) * lineout_height
-
-            Row_sum = (R_height * rounding.normalise(np.sum(long_Phase, axis=1))) + (t_min)
-            T_line  = T_Bins - t_at_max                                                 # Set centre of beam to z = 0
-            Col_sum = (Ene_height * rounding.normalise(np.sum(long_Phase, axis=0))) + Spec_Min
-
-            return long_Phase, Spec_Min, Spec_Max, E_Bins, t_min, t_max, T_Bins, Row_sum, T_line, Col_sum
+        return Et_Phase, plt_limits, T_Bins, E_Bins, t_line, Energy_line
         
-        else:
-            return long_Phase, Spec_Min, Spec_Max, E_Bins, t_min, t_max, T_Bins
 
+    def Div_r_space(self, Coord: str, r_res, r_round, div_res, div_round, lineout_height: float = 0.2):
+        """
+        Calculate the transverse phase with lineouts.
 
-    def Div_r_space(self, Coord, r_res, r_round, div_round, div_res, Find_Lineouts: bool = True, lineout_height=0.2):
+        Parameters
+        ----------
+        Coord : str
+            Transverse coordinate for calculating phase space
+        r_res : float
+            Restolution of histogram binning in transverse axis. Default unit: microns
+        r_round : float
+            Rounding value for transverse axis to determine max & min r histogram bin. Default unit: microns
+        div_res : float
+            Restolution of histogram binning in divergence axis. Default unit: mrad
+        div_round : float
+            Rounding value for transverse axis to determine max & min divergence histogram bin. Default unit: mrad
+        lineout_height : float, optional
+            Height of lineout relative to the plot axes limits, by default 0.2
+
+        Returns
+        -------
+        Trans_phase: array_like
+            The bi-dimensional histogram of samples r and divergence. Values in r are histogrammed along the first dimension and values in divergence are histogrammed along the second dimension.
+        plt_limits: list
+            List containing the maximum and minimum bin values in each axis. Useful for setting plot axes limits.
+            [R_min, R_max, div_min, div_max]
+        R_Bins
+            Array containing histogram bins of r axis
+        D_Bins: array_like
+            Array containing histogram bins of divergence axis
+        col_sum: array_like
+            Lineout of phase space data in r axis
+        Row_sum: array_like
+            Lineout of phase space data in divergence axis
+        """
 
         if Coord == "x":
             Div_r = self.div_x
@@ -407,27 +472,20 @@ class PhaseSpace():
             Div_r = self.div_x
             r     = magnitude_conversion(self.x, "", self.r_unit)
            
-        _, max_div, D_Bins   = binning.get_bins_absolute(Div_r, div_res, div_round)
-        R_min, R_max, R_Bins = binning.get_bins_absolute(r, r_res, r_round)
+        div_min, div_max, D_Bins = binning.get_bins_absolute(Div_r, div_res, div_round)
+        R_min, R_max, R_Bins     = binning.get_bins_absolute(r, r_res, r_round)
+        Trans_phase              = np.flipud(np.histogram2d(Div_r, r, bins=(D_Bins, R_Bins), weights=self.w )[0])
 
-        Trans_phase, _, _ = np.histogram2d(Div_r, r, bins=(D_Bins, R_Bins), weights=self.w )
+        plt_limits = [R_min, R_max, div_min, div_max]
 
-        if Find_Lineouts is True:
-            # Lineout plots are: plt.plot(Row_sum_Trans, D_Bins[:-1]) and plt.plot(R_line, col_sum_Trans)
-            # This only makes sense with x and y coords so no need to set centre of beam to zero, unlike Energy_r_space()
+        # The lineouts should the their own function which takes in the histograms and ouputs the lines.
+        X_height   = (div_max - div_min) * lineout_height                       # lineout 20% of plot window in height by default
+        Div_height = (R_max - R_min) * lineout_height                           # lineout 20% of plot window in height by default
 
-            # The lineouts should the their own function which takes in the histograms and ouputs the lines.
-            X_height   = (2*max_div) * lineout_height                     # lineout 20% of plot window in height
-            Div_height = (R_max - R_min) * lineout_height
-    
-            Row_sum_Trans = (Div_height * rounding.normalise(np.sum(Trans_phase, axis=1))) - abs(R_min)
-            R_line        = R_Bins[:-1]
-            col_sum_Trans = (X_height * rounding.normalise(np.sum(Trans_phase, axis=0))) + (-1*max_div)
+        Row_sum = np.flip(np.append( (Div_height * rounding.normalise(np.sum(Trans_phase, axis=1))) - abs(R_min) , R_min))
+        col_sum = np.append( (X_height * rounding.normalise(np.sum(Trans_phase, axis=0))) + (-1*div_max) , div_min)
 
-            return Trans_phase, max_div, D_Bins, R_min, R_max, R_Bins, Row_sum_Trans, R_line, col_sum_Trans
-        
-        else:
-            return Trans_phase, max_div, D_Bins, R_min, R_max, R_Bins
+        return Trans_phase, plt_limits, R_Bins, D_Bins, col_sum, Row_sum
 
 
 class BeamProjection():
@@ -436,12 +494,18 @@ class BeamProjection():
         """
         Calculate 2D histograms of beam projections
 
+        To Do:
+            - Modify to allow for different order of magnitude in the units for a and b.
+                This would be useful for xz plots where x is um and z is mm.
+
         Parameters
         ----------
         a : array_like
             Particle positions in axis a. Could be x, y, z, r (m)
+            This will for the x-axis of the histogram
         b : array_like
             Particle positions in axis b. Could be x, y, z, r (m)
+            This will for the y-axis of the histogram
         w : array_like
             Macroparticle weights
         r_unit : str, optional
@@ -455,7 +519,7 @@ class BeamProjection():
         self.a_converted  = magnitude_conversion(self.a, "", self.r_unit)
         self.b_converted  = magnitude_conversion(self.b, "", self.r_unit)
 
-    def beam_projection(self, r_res, r_round, independant_bins=False, equal_bins=False):
+    def beam_projection(self, r_res, r_round, independant_bins: bool = False, equal_bins: bool = False):
         """
         Calculate 2D histograms of beam projection.
 
@@ -500,7 +564,7 @@ class BeamProjection():
                 A_min, A_max, A_Bins = binning.get_bins(self.a_converted, r_res, r_round)
                 B_min, B_max, B_Bins = binning.get_bins(self.b_converted, r_res, r_round)
 
-            projection, _, _ = np.histogram2d(self.a_converted, self.b_converted, bins=(A_Bins, B_Bins), weights=self.w )
+            projection = np.flipud(np.histogram2d(self.b_converted, self.a_converted, bins=(B_Bins, A_Bins), weights=self.w )[0])
 
             return projection, [A_min, A_max, B_min, B_max], A_Bins, B_Bins
 
@@ -511,7 +575,7 @@ class BeamProjection():
             else:
                 r_min, r_max, R_Bins = binning.get_bins(np.concatenate((self.a_converted, self.b_converted)), r_res, r_round)
 
-            projection, _, _ = np.histogram2d(self.a_converted, self.b_converted, bins=(R_Bins, R_Bins), weights=self.w )
+            projection = np.flipud(np.histogram2d(self.b_converted, self.a_converted, bins=(R_Bins, R_Bins), weights=self.w )[0])
 
             return projection, [r_min, r_max, r_min, r_max], R_Bins, R_Bins
         
@@ -540,7 +604,7 @@ class BeamProjection():
         A_Bins = np.arange(window_extent[0], window_extent[1]+r_res, r_res)
         B_Bins = np.arange(window_extent[2], window_extent[3]+r_res, r_res)
 
-        projection, _, _ = np.histogram2d(self.a_converted, self.b_converted, bins=(A_Bins, B_Bins), weights=self.w )
+        projection = np.flipud(np.histogram2d(self.b_converted, self.a_converted, bins=(B_Bins, A_Bins), weights=self.w )[0])
 
         return projection, A_Bins, B_Bins
     
@@ -562,7 +626,6 @@ def get_normalised_momentum(energy, energy_unit: str = "Mega"):
         normalised electron energy
     """
 
-    elec_rest_mass = (m_e*c**2)/e                   # Electron rest mass (eV)
     energy_eV      = magnitude_conversion(energy, energy_unit, "")
     energy_norm    = energy_eV/elec_rest_mass    # Threshold for including electrons in particle diagnostic (normalised units)
 
