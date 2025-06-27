@@ -61,13 +61,13 @@ class laser_wavelength_conversions():
         freq: float
             Frequency of the laser radiation. Default unit: THz
         omega: float
-            Angular frequency of the laser radiation. Default unit: 1/s 
+            Angular frequency of the laser radiation. Default unit: rad/s 
         """
 
         freq  = c/self.lambda0_SI
         omega = (2*pi*c)/self.lambda0_SI
 
-        return magnitude_conversion(freq, "", self.freq_unit), magnitude_conversion(omega, "", self.time_unit, reciprocal_units = True)
+        return magnitude_conversion(freq, "", self.freq_unit), omega
     
     def get_wavenumber(self):
         """
@@ -91,7 +91,7 @@ class laser_wavelength_conversions():
         Returns
         -------
         T: float
-            Laser period. Default unit: s
+            Laser period. Default unit: fs
         """
 
         T = self.lambda0_SI/c
