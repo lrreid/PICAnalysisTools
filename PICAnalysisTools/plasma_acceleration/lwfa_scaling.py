@@ -258,11 +258,11 @@ def max_energy_scaling(a0, lambda0, tau, n_e, wavelength_unit: str = "nano", tim
     return E_max_lin, E_max_1D, E_max_3D, E_max_Pukhov
 
 
-def max_energy_scaling_engineering(n_e, lambda0, Energy, tau_FWHM, w0, den_unit: str = "centi", wavelength_unit: str = "nano", laser_energy_unit: str = "milli", time_unit: str = "femto", spot_unit: str = "micro", elec_energy_unit: str = "Mega"):
+def max_energy_scaling_engineering(n_e, lambda0, Energy, tau_FWHM, w0, den_unit: str = "centi", wavelength_unit: str = "nano", laser_energy_unit: str = "milli", time_unit: str = "femto", spot_unit: str = "micro", elec_energy_unit: str = "Mega", power_unit: str = "tera"):
     """
     Calculations of the maximum electron energy from a laser wakefield accelerator using "engineering" models from the literature.
     Eqns from Lu et al. (2007). https://doi.org/10.1103/PhysRevSTAB.10.061301.
-    And Gordienko & Pukhov (2005). https://doi.org/10.1063/1.1884126 
+    And Gordienko & Pukhov (2005). https://doi.org/10.1063/1.1884126
 
     Parameters
     ----------
@@ -288,6 +288,8 @@ def max_energy_scaling_engineering(n_e, lambda0, Energy, tau_FWHM, w0, den_unit:
         Order of magnitude of laser spot size unit, by default "micro"
     elec_energy_unit : str, optional
         Order of magnitude of electron energy unit, by default "Mega"
+    power_unit : str, optional
+        Order of magnitude of laser power unit, by default "Tera"
 
     Returns
     -------
@@ -297,20 +299,23 @@ def max_energy_scaling_engineering(n_e, lambda0, Energy, tau_FWHM, w0, den_unit:
         Maximum electron energy accoring to Pukhov model. Eqn 1. Default unit: MeV
     E_PAlt: float
         Maximum electron energy accoring to Pukhov model re-rwitten by Lu. Eqn 13. Default unit: MeV
+    P_laser: float
+        Laser power. Default unit: TW
     """
 
-    P_SI      = magnitude_conversion(Energy, laser_energy_unit, "")/magnitude_conversion(tau_FWHM, time_unit, "")
-    P_TW      = magnitude_conversion(P_SI, "", "Tera")
-    n_e_SI    = magnitude_conversion_vol(n_e, den_unit, "", reciprocal_units = True)
-    n_c       = critical_density(lambda0, wavelength_unit = wavelength_unit, den_unit = "" )                            # Critical density (m^-3)
-    lambda_SI = magnitude_conversion(lambda0, wavelength_unit, "")
-    w0_SI     = magnitude_conversion(w0, spot_unit, "")
+    tau_FWHM_SI = magnitude_conversion(tau_FWHM, time_unit, "")
+    P_SI        = magnitude_conversion(Energy, laser_energy_unit, "")/tau_FWHM_SI
+    P_TW        = magnitude_conversion(P_SI, "", "Tera")
+    n_e_SI      = magnitude_conversion_vol(n_e, den_unit, "", reciprocal_units = True)
+    n_c         = critical_density(lambda0, wavelength_unit = wavelength_unit, den_unit = "" )                            # Critical density (m^-3)
+    lambda_SI   = magnitude_conversion(lambda0, wavelength_unit, "")
+    w0_SI       = magnitude_conversion(w0, spot_unit, "")
 
     E_Lu     = 1.7 * ((P_TW/100)**(1/3)) * ((1e24/n_e_SI)**(1/3)) * ((0.8e-6/lambda_SI)**(4/3))                         # Max energy according to Lu (GeV) - Lu eqn 6
-    E_Pukhov = 0.65 * ((m_e*c**2)/e) * np.sqrt(P_SI/P_rel) * (c*tau_FWHM/lambda_SI)                                     # Max energy according to Pukhov (eV) - Pukhov eqn 1 & Lu eqn 12
-    E_PAlt   = 0.16 * ((m_e*c**2)/e) * ((c*tau_FWHM)/w0_SI) * ((P_SI/P_rel)**(2/3)) * ((n_c/n_e_SI)**(1/3))             # Max energy according to Pukhov (eV) - re-rwitten by Lu (eqn 13)
+    E_Pukhov = 0.65 * ((m_e*c**2)/e) * np.sqrt(P_SI/P_rel) * (c*tau_FWHM_SI/lambda_SI)                                     # Max energy according to Pukhov (eV) - Pukhov eqn 1 & Lu eqn 12
+    E_PAlt   = 0.16 * ((m_e*c**2)/e) * ((c*tau_FWHM_SI)/w0_SI) * ((P_SI/P_rel)**(2/3)) * ((n_c/n_e_SI)**(1/3))             # Max energy according to Pukhov (eV) - re-rwitten by Lu (eqn 13)
     
-    return magnitude_conversion(E_Lu, "Giga", elec_energy_unit), magnitude_conversion(E_Pukhov, "", elec_energy_unit), magnitude_conversion(E_PAlt, "", elec_energy_unit)
+    return magnitude_conversion(E_Lu, "Giga", elec_energy_unit), magnitude_conversion(E_Pukhov, "", elec_energy_unit), magnitude_conversion(E_PAlt, "", elec_energy_unit), magnitude_conversion(P_SI, "", power_unit)
 
 def betatron_frequency(n_e, Ek, energy_unit: str = "Mega", den_unit: str = "centi"):
     """

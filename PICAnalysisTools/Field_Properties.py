@@ -58,7 +58,7 @@ class FieldProperites():
 
         return pixel_no
 
-    def get_longitudinal_lineout(self, position, position_unit: str = "micro"):
+    def get_longitudinal_lineout(self, position, position_unit: str = "micro", field_unit: str = ""):
         """
         Get longitudianal lineout of field.
         Function currently assumes cylindrical geometery.
@@ -82,9 +82,9 @@ class FieldProperites():
             pixel_no = self.find_pixel_number(self.info_field.r, position, position_unit)
             lineout  = self.field[pixel_no,:]
 
-        return lineout
+        return magnitude_conversion(self.info_field.z, "", self.z_unit), magnitude_conversion(lineout, "", field_unit)
     
-    def get_transverse_lineout(self, position, position_unit: str = "micro"):
+    def get_transverse_lineout(self, position, position_unit: str = "micro", field_unit: str = ""):
         """
         Get transverse lineout of field.
 
@@ -104,7 +104,7 @@ class FieldProperites():
         pixel_no = self.find_pixel_number(self.info_field.z, position, position_unit)
         lineout  = self.field[:,pixel_no]
 
-        return lineout
+        return magnitude_conversion(self.info_field.r, "", self.r_unit), magnitude_conversion(lineout, "", field_unit)
 
     def find_field_max(self, use_absolute: bool = False, centroid_unit: str = "micro"):
         """
