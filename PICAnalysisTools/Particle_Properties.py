@@ -4,6 +4,7 @@ This file contains functions relevant for analysing the particles in PIC simualt
 TO DO:
     - Take lineouts of histograms (summed and line) should be their own function/class
     - Shift x, z, time axis to centre of beam should be its own function
+    - Adapt transverse particle properties to choose order of magnitude of Twiss beta values.
 
 """
 
@@ -122,7 +123,7 @@ class ParticleEnergy():
 
 class ParticleTransverseProperties:
 
-    def __init__(self, r, ur, z, uz, w, r_unit: str = "micro", div_unit: str = "milli", emit_unit: str = "micro"):
+    def __init__(self, r, ur, z, uz, w, r_unit: str = "micro", div_unit: str = "milli", emit_unit: str = "micro", beta_unit: str = "milli", gamma_unit: str = ""):
         """
         Class to calculate transverse properties of a particle species
 
@@ -151,9 +152,11 @@ class ParticleTransverseProperties:
         self.z  = z
         self.uz = uz
         self.w  = w
-        self.r_unit    = r_unit
-        self.div_unit  = div_unit
-        self.emit_unit = emit_unit
+        self.r_unit     = r_unit
+        self.div_unit   = div_unit
+        self.emit_unit  = emit_unit
+        self.beta_unit  = beta_unit
+        self.gamma_unit = gamma_unit
         self.beam_r, self.div_r, self.eta_tr_norm_r, self.Twiss_alpha, self.Twiss_beta, self.Twiss_gamma = self.transverse_beam_properties()
         self.beam_z    = self.beam_length()
     
@@ -209,7 +212,7 @@ class ParticleTransverseProperties:
         Twiss_beta  = r2_mean/eta_tr
         Twiss_gamma = rPrime2_mean/eta_tr
 
-        return magnitude_conversion(beam_r, "", self.r_unit), magnitude_conversion(div_r, "", self.div_unit), magnitude_conversion(eta_tr_norm_r, "", self.emit_unit), Twiss_alpha, Twiss_beta, Twiss_gamma
+        return magnitude_conversion(beam_r, "", self.r_unit), magnitude_conversion(div_r, "", self.div_unit), magnitude_conversion(eta_tr_norm_r, "", self.emit_unit), Twiss_alpha, magnitude_conversion(Twiss_beta, "", self.beta_unit), magnitude_conversion(Twiss_gamma, "", self.gamma_unit, reciprocal_units = True)
 
 
 class PhaseSpace():
