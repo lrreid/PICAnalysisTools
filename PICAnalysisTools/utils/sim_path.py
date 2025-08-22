@@ -39,6 +39,33 @@ def set_sim_path(FolderPath: str, Simulation: str, boosted_frame: bool = False):
 
     return FilePath, SimPath
 
+
+def set_sim_path_from_cwd(Path_to_Sim: str, boosted_frame: bool = False):
+    """
+    Set the path to directory which contains .h5 files containing simulation data
+
+    Parameters
+    ----------
+    Path_to_Sim : str
+        Path to diectory of simulation containing input script
+    boosted_frame : bool, optional
+        If true, function will choose lab frame diagnostics directory (lab_diags), by default False
+
+    Returns
+    -------
+    FilePath: str
+        Full path to data files
+    """
+
+    if boosted_frame is True:
+        FilePath = join(Path_to_Sim, 'lab_diags', 'hdf5')
+    else:
+        FilePath = join(Path_to_Sim, 'diags', 'hdf5')
+   
+    FilePath = FilePath.replace('//', '/')      # Remove unceccessary Windows style double slashes
+
+    return FilePath
+
 def set_analysis_path(SimPath: str, Ana_name: str):
     """
     Set and create directory where analysed data is saved

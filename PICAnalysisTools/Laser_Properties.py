@@ -14,11 +14,15 @@ from os.path import exists, join
 from os import makedirs, getcwd
 from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, get_order_letter
 from PICAnalysisTools.utils.statistics import w_std
+from PICAnalysisTools.utils.plot_limits import plt_limits
 
+import matplotlib.pyplot as plt
+from matplotlib import use
+use("Agg")  
 
 class LaserProperties():
 
-    def __init__(self, ts, Coord = "x", Method: str = "fit", Profile_Method: str = "projection", centroid_unit: str = "micro", spot_unit: str = "micro", time_unit: str = "femto"):
+    def __init__(self, ts, Coord = "x", Method: str = "fit", Profile_Method: str = "projection", centroid_unit: str = "micro", spot_unit: str = "micro", time_unit: str = "femto", Sim_Path: str = getcwd() ):
         """
         Class containing functions to extract properties of the laser field from PIC simulations
 
@@ -43,6 +47,8 @@ class LaserProperties():
             Order of magnitude of the laser spot size units, by default "micro"
         time_unit : str, optional
             Order of magnitude of pulse duration units, by default "femto"
+        Sim_Path : str, optional
+            Full path to simulation directory, by default getcwd()
         """
 
         self.ts             = ts
@@ -52,6 +58,8 @@ class LaserProperties():
         self.Coord          = Coord
         self.Method         = Method
         self.Profile_Method = Profile_Method
+        self.Sim_Path       = Sim_Path
+        self.Ana_dir        = join(Sim_Path, 'Analysed', 'Laser_properties_tracking')
 
     def get_laser_properties_single(self, Snapshot):
         '''
@@ -85,7 +93,7 @@ class LaserProperties():
         return Centroid, a0, magnitude_conversion(Waist, "", self.spot_unit), magnitude_conversion(t_FWHM, "", self.time_unit)
     
 
-    def get_laser_properties_loop(self, save_txt: bool = False, Sim_Path=getcwd()):
+    def get_laser_properties_loop(self, save_txt: bool = False):
         """
         Loop through all available h5 files and extract laser properties
 
@@ -93,8 +101,6 @@ class LaserProperties():
         ----------
         save_txt : bool, optional
             If true, text file containing will be saved, by default False
-        Sim_Path : str, optional
-            Full path to directory where text file will be saved, by default getcwd()
 
         Returns
         -------
@@ -107,8 +113,11 @@ class LaserProperties():
         """
 
         output = np.zeros([len(self.ts.iterations), 4])                                  # Create array of zeros to store analysed data
+        print("\nAnalysing laser properties\nIteration:")
 
         for k in range(len(self.ts.iterations)):
+            print("%d / %d" % (k+1, len(self.ts.iterations)) )
+
             laser_properties = self.get_laser_properties_single(k)
 
             output[k, 0] = np.round(laser_properties[0], 4)       # Add laser centroid to output matrix
@@ -117,11 +126,9 @@ class LaserProperties():
             output[k, 3] = np.round(laser_properties[3], 4)       # Add laser pulse duration to output matrix
 
         if save_txt is True:
-            
-            Ana_dir = join(Sim_Path, 'Analysed', 'Laser_properties_tracking')
 
-            if exists(Ana_dir) is False:
-                makedirs(Ana_dir)
+            if exists(self.Ana_dir) is False:
+                makedirs(self.Ana_dir)
 
             title_centroid = "Centroid (%sm)" % get_order_letter(self.centroid_unit)
             title_a0       = "a0"
@@ -129,9 +136,55 @@ class LaserProperties():
             title_duration = "tau_FWHM (%ss)" % get_order_letter(self.time_unit)
 
             titles   = ["%s" % title_centroid, "%s" % title_a0, "%s" % title_spot, "%s" % title_duration]
-            np.savetxt("%s/Laser_Tracking_summary.txt" % (Ana_dir), output, fmt=('%.4f'), delimiter = '\t', header  = '\t'.join(titles), comments = '' )
+            np.savetxt("%s/Laser_Tracking_summary.txt" % (self.Ana_dir), output, fmt=('%.4f'), delimiter = '\t', header  = '\t'.join(titles), comments = '' )
+
+        print("\n")
 
         return output
+    
+    def plot_laser_properties(self, output, centroid_round, a0_round, w0_round, time_round):
+        fsize = 12
+
+        if exists(self.Ana_dir) is False:
+            makedirs(self.Ana_dir)
+
+        centroid_min, centroid_max = plt_limits(output[:, 0], centroid_round)
+        a0_min, a0_max             = plt_limits(output[:, 1], a0_round)
+        w0_min, w0_max             = plt_limits(output[:, 2], w0_round)
+        tau_min, tau_max           = plt_limits(output[:, 3], time_round)
+
+        fig, ax = plt.subplots(dpi=300)
+        plt.plot(output[:,0], output[:,1],'-o', color='dodgerblue', linewidth=2)
+        plt.axis([centroid_min, centroid_max, a0_min, a0_max])         # set axes [xmin, xmax, ymin, ymax]
+        ax.set_title("laser $a_{0}$ tracking", fontsize=fsize)
+        ax.set_xlabel('z (%sm)' % (get_order_letter(self.centroid_unit, return_mu=True)) , fontsize=fsize)
+        ax.set_ylabel('$a_{0}$', fontsize=fsize)
+        ax.grid()
+        plt.savefig("%s/a0_tracking.png" % (self.Ana_dir), dpi=300, format="png")
+        plt.close()
+
+        fig, ax = plt.subplots(dpi=300)
+        plt.plot(output[:,0], output[:,2],'-o', color='firebrick', linewidth=2)
+        plt.axis([centroid_min, centroid_max, w0_min, w0_max])         # set axes [xmin, xmax, ymin, ymax]
+        ax.set_title("laser spot size tracking", fontsize=fsize)
+        ax.set_xlabel('z (%sm)' % (get_order_letter(self.spot_unit, return_mu=True)) , fontsize=fsize)
+        ax.set_ylabel('$\\omega$ (%sm)' % (get_order_letter(self.centroid_unit, return_mu=True)), fontsize=fsize)
+        ax.grid()
+        plt.savefig("%s/w0_tracking.png" % (self.Ana_dir), dpi=300, format="png")
+        plt.close()
+
+        fig, ax = plt.subplots(dpi=300)
+        plt.plot(output[:,0], output[:,3],'-o', color='seagreen', linewidth=2)
+        plt.axis([centroid_min, centroid_max, tau_min, tau_max])         # set axes [xmin, xmax, ymin, ymax]
+        ax.set_title("laser pulse duration tracking", fontsize=fsize)
+        ax.set_xlabel('z (%sm)' % (get_order_letter(self.centroid_unit, return_mu=True)) , fontsize=fsize)
+        ax.set_ylabel('$\\tau_{FWHM}$ (%ss)' % (get_order_letter(self.time_unit)), fontsize=fsize)
+        ax.grid()
+        plt.savefig("%s/tau_tracking.png" % (self.Ana_dir), dpi=300, format="png")
+        plt.close()
+
+
+        return None
 
 
 def get_a0_field_map(ts, Snapshot):
