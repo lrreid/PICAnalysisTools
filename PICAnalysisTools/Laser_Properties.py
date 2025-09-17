@@ -17,8 +17,6 @@ from PICAnalysisTools.utils.statistics import w_std
 from PICAnalysisTools.utils.plot_limits import plt_limits
 
 import matplotlib.pyplot as plt
-from matplotlib import use
-use("Agg")  
 
 class LaserProperties():
 
@@ -142,7 +140,7 @@ class LaserProperties():
 
         return output
     
-    def plot_laser_properties(self, output, centroid_round, a0_round, w0_round, time_round):
+    def plot_laser_properties(self, output, centroid_round, a0_round, w0_round, time_round): 
         fsize = 12
 
         if exists(self.Ana_dir) is False:

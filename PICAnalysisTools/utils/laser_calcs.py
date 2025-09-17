@@ -217,6 +217,37 @@ def Gaussian_laser_intensitiy(Energy, tau_FWHM, w0, lambda0: float = 800, energy
     return magnitude_conversion_area(Int, "", int_unit, reciprocal_units = True), a0
 
 
+def Gaussian_spot_size_from_intensity(Energy, tau_FWHM, Int, energy_unit: str = "milli", time_unit: str = "femto", int_unit: str = "centi", spot_unit: str = "micro" ):
+    
+    Energy_SI   = magnitude_conversion(Energy, energy_unit, "")
+    tau_FWHM_SI = magnitude_conversion(tau_FWHM, time_unit, "") 
+    Int_SI      = magnitude_conversion_area(Int, int_unit, "", reciprocal_units = True)
+    
+    spot_size = (2*Energy_SI)/(tau_FWHM_SI*pi*Int_SI)
+    
+    return magnitude_conversion(spot_size, "", spot_unit)
+
+
+def Gaussian_Energy_from_intenstiy(tau_FWHM, w0, Int, time_unit: str = "femto", spot_unit: str = "micro", int_unit: str = "centi", energy_unit: str = "milli"):
+
+    tau_FWHM_SI = magnitude_conversion(tau_FWHM, time_unit, "")
+    w0_SI       = magnitude_conversion(w0, spot_unit, "")
+    Int_SI      = magnitude_conversion_area(Int, int_unit, "", reciprocal_units = True)
+    
+    Energy = 0.5*Int_SI*tau_FWHM_SI*pi*(w0_SI**2)
+    
+    return magnitude_conversion(Energy, "", energy_unit)
+
+
+def get_laser_power(Energy, tau_FWHM, energy_unit: str = "milli", time_unit: str = "femto", power_unit: str = "Tera"):
+
+    Energy_SI   = magnitude_conversion(Energy, energy_unit, "")
+    tau_FWHM_SI = magnitude_conversion(tau_FWHM, time_unit, "") 
+    
+    Power = Energy_SI/tau_FWHM_SI
+    
+    return magnitude_conversion(Power, "", power_unit)
+
 #%% Focusing of top hat beams
 
 def top_hat_laser_intensitiy(Energy, tau_FWHM, beam_rad, lambda0, focal_length, energy_unit: str = "milli", time_unit: str = "femto", beam_unit: str = "milli", f_unit: str = "milli", wavelength_unit: str = "nano", int_unit: str = "centi", spot_unit: str = "micro"):
@@ -396,8 +427,8 @@ def ponderomotive_energy(a0, energy_unit: str = "kilo"):
         Cycle-averaged ponderomotive electron energy. Default unit: keV
     """
 
-    E_pond_max = (m_e*c**2)*(np.sqrt(1+(a0**2))-1)
-    E_pond_avg = (m_e*c**2)*(np.sqrt(1+((a0/2)**2))-1)
+    E_pond_max = ((m_e*c**2)/e)*(np.sqrt(1+(a0**2))-1)
+    E_pond_avg = ((m_e*c**2)/e)*(np.sqrt(1+((a0**2)/2))-1)
 
     return magnitude_conversion(E_pond_max, "", energy_unit), magnitude_conversion(E_pond_avg, "", energy_unit)
 
