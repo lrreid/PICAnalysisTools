@@ -95,4 +95,4 @@ def superGauss_beam_conversions_CA(order, clear_aperture_rad, show_prints:bool =
         print("1/e2 dia: %0.2f" % np.round(e2_radius*2, 2) )
         print("1 %% intensity contour dia: %0.2f" % np.round(one_pc_contour*2, 2) )
 
-    return None
+    return rms_radius, FWHM, e2_radius, one_pc_contour
