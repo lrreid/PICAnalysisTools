@@ -3,8 +3,8 @@ Set paths to directories where data files are saved.
 """
 
 from os.path import exists, join
-from os import makedirs
-
+from os import makedirs, listdir
+from sys import exit
 
 def set_sim_path(FolderPath: str, Simulation: str, boosted_frame: bool = False):
     """
@@ -37,6 +37,8 @@ def set_sim_path(FolderPath: str, Simulation: str, boosted_frame: bool = False):
     FilePath = FilePath.replace('//', '/')      # Remove unceccessary Windows style double slashes
     SimPath  = SimPath.replace('//', '/')       # Remove unceccessary Windows style double slashes
 
+    check_for_h5_files(SimPath)                 # Stop script if no files are in simulation directory
+
     return FilePath, SimPath
 
 
@@ -64,6 +66,8 @@ def set_sim_path_from_cwd(Path_to_Sim: str, boosted_frame: bool = False):
    
     FilePath = FilePath.replace('//', '/')      # Remove unceccessary Windows style double slashes
 
+    check_for_h5_files(FilePath)                # Stop script if no files are in simulation directory
+
     return FilePath
 
 def set_analysis_path(SimPath: str, Ana_name: str):
@@ -89,3 +93,25 @@ def set_analysis_path(SimPath: str, Ana_name: str):
         makedirs(Analysis_path)
 
     return Analysis_path
+
+def check_for_h5_files(h5path: str):
+    """
+    Check if Simulation path directory contains any files. If not, the analysis stops.
+
+    Parameters
+    ----------
+    h5path : string
+        Full path to directory containing simulation files to analyse
+
+    """
+
+    if exists(h5path) is False:
+        print("Chosen directory for simulation files does not exist\nAnalysis stopped.")
+        exit()
+
+
+    if len([i for i in listdir(h5path) if i.endswith('.h5')]) == 0:
+        print("No .h5 files found in SimPath directory!\nAnalysis stopped.")
+        exit()
+
+    return None
