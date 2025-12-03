@@ -107,7 +107,7 @@ def charge_density(sig_r, sig_z, Q, sigma_unit: str ="micro", charge_unit: str =
     sig_z_SI = magnitude_conversion(sig_z, sigma_unit, "")
     Q_SI     = magnitude_conversion(Q, charge_unit, "")
         
-    nb = (Q_SI*1e-12) / (e * ((2*pi)**(3/2)) * (sig_r_SI)**2  * (sig_z_SI) ) # Beam charge density (m-3)
+    nb = (Q_SI) / (e * ((2*pi)**(3/2)) * (sig_r_SI)**2  * (sig_z_SI) ) # Beam charge density (m-3)
     
     return magnitude_conversion_vol(nb, "", den_unit, reciprocal_units = True)
 

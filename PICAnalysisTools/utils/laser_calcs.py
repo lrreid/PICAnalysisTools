@@ -13,6 +13,7 @@ To Do:
 import numpy as np
 from scipy.constants import c, e, pi, epsilon_0, m_e, h
 from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, magnitude_conversion_area # type: ignore
+from PICAnalysisTools.utils.basic_calcs import area_circle, area_circle_projection
 
 class laser_wavelength_conversions():
 
@@ -504,3 +505,48 @@ def ND_filter_Energy_transmission(OD, Energy_in, energy_in_unit: str = "milli", 
     Energy_out   = Energy_in_SI*ND_filter_transmission(OD)
 
     return magnitude_conversion(Energy_out, "", energy_out_unit)
+
+
+
+#%% Calculate laser beam energy and power denisty
+
+def energy_density(Laser_Energy, Beam_diameter, Beam_profile: str = "Super-Gauss", energy_unit: str = "milli", dia_unit: str = "milli", Eden_energy_unit: str = "milli", Eden_area_unit: str = "centi" ):
+    """
+    For a Super-Gaussian beam, use the FWHM for the diameter.
+    For a Gaussian beam, use the 1/e^2 for the diameter.
+
+    """
+
+    Laser_Energy_SI = magnitude_conversion(Laser_Energy, energy_unit, "", reciprocal_units = False)
+    
+    Energy_Density = Laser_Energy_SI/area_circle(Beam_diameter, dia_unit = dia_unit, area_unit=Eden_area_unit)
+
+    if Beam_profile == "Super-Gauss":
+        Energy_Density = Laser_Energy_SI/area_circle(Beam_diameter, dia_unit = dia_unit, area_unit=Eden_area_unit)
+    elif Beam_profile == "Gaussian":
+        Energy_Density = (2*Laser_Energy_SI)/area_circle(Beam_diameter, dia_unit = dia_unit, area_unit=Eden_area_unit)
+    else:
+        print("Beam profile incorrectly defined. Choose Super-Gauss or Gaussian.\nDefaulted to Super-Gauss.")
+        Energy_Density = Laser_Energy_SI/area_circle(Beam_diameter, dia_unit = dia_unit, area_unit=Eden_area_unit)
+        
+
+    return magnitude_conversion(Energy_Density, "", Eden_energy_unit, reciprocal_units = False)
+
+
+def peak_power_density(Laser_Energy, Beam_diameter, tau_FWHM, Beam_profile: str = "Super-Gauss", energy_unit: str = "milli", time_unit: str = "femto", dia_unit: str = "milli", Pden_power_unit: str = "Mega", Pden_area_unit: str = "centi"):
+
+    Energy_density = energy_density(Laser_Energy, Beam_diameter, Beam_profile = Beam_profile, energy_unit = energy_unit, dia_unit = dia_unit, Eden_energy_unit = "", Eden_area_unit = Pden_area_unit )
+
+    tau_FWHM_SI   = magnitude_conversion(tau_FWHM, time_unit, "", reciprocal_units = False)
+    Power_density = Energy_density/tau_FWHM_SI
+
+    return magnitude_conversion(Power_density, "", Pden_power_unit, reciprocal_units = False) 
+
+def average_power_denstiy(Laser_Energy, Beam_diameter, rep_rate, Beam_profile: str = "Super-Gauss", energy_unit: str = "milli", rep_unit: str = "", dia_unit: str = "milli", Pden_power_unit: str = "", Pden_area_unit: str = "centi"):
+
+    rep_rate_Hz   = magnitude_conversion(rep_rate, rep_unit, "", reciprocal_units = False)
+
+    Energy_density = energy_density(Laser_Energy, Beam_diameter, Beam_profile = Beam_profile, energy_unit = energy_unit, dia_unit = dia_unit, Eden_energy_unit = "", Eden_area_unit = Pden_area_unit )
+    Power_density  = Energy_density * rep_rate_Hz
+
+    return magnitude_conversion(Power_density, "", Pden_power_unit, reciprocal_units = False)
