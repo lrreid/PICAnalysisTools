@@ -83,7 +83,7 @@ class PlasmaDen_Conversions():
             Plasma period. Default unit: fs
         """
 
-        T_p = ((2*pi)*np.sqrt((epsilon_0*m_e)/(self.n_e_SI*e**2)) )          # Plasma period (s)
+        T_p = ((2*pi)/e)*np.sqrt((epsilon_0*m_e)/(self.n_e_SI))         # Plasma period (s)
 
         return magnitude_conversion(T_p, "", self.time_unit)
 

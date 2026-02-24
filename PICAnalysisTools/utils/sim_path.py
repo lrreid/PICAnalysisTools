@@ -37,7 +37,10 @@ def set_sim_path(FolderPath: str, Simulation: str, boosted_frame: bool = False):
     FilePath = FilePath.replace('//', '/')      # Remove unceccessary Windows style double slashes
     SimPath  = SimPath.replace('//', '/')       # Remove unceccessary Windows style double slashes
 
-    check_for_h5_files(SimPath)                 # Stop script if no files are in simulation directory
+    check_for_h5_files(FilePath)                 # Stop script if no files are in simulation directory
+
+    # print("FilePath: %s" % FilePath)
+    # print("SimPath: %s" % SimPath)
 
     return FilePath, SimPath
 

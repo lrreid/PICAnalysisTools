@@ -252,7 +252,8 @@ def get_spectrum(ts, snapshot, m: str = 'all', coord: str = 'x', wavelength_unit
     Omega      = np.arange(dO,Omega_max,dO)                         # Array of angular frequency points
     wavelength = ((2*pi*c)/Omega)                                   # Convert omega to wavelength (m)
 
-    return magnitude_conversion(wavelength, "", wavelength_unit), spectrum[1:]
+    # Previously I returned spectrum[1:] but this caused problems with get_central_wavelength
+    return magnitude_conversion(wavelength, "", wavelength_unit), spectrum
 
 
 def get_central_wavelength(ts, snapshot, m: str = 'all', coord: str = 'x', wavelength_unit: str = "nano" ):
