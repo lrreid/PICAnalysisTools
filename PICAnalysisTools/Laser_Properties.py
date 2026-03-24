@@ -249,10 +249,11 @@ def get_spectrum(ts, snapshot, m: str = 'all', coord: str = 'x', wavelength_unit
 
     dO         = (2*pi*c)/(info_field.zmax - info_field.zmin)       # Grid spacing of angular frequency 
     Omega_max  = dO*len(spectrum)                                   # Peak angular frequency in spectrum
-    Omega      = np.arange(dO,Omega_max,dO)                         # Array of angular frequency points
-    wavelength = ((2*pi*c)/Omega)                                   # Convert omega to wavelength (m)
+    # Omega      = np.arange(dO,Omega_max,dO)                         # Array of angular frequency points
+    # wavelength = ((2*pi*c)/Omega)                                   # Convert omega to wavelength (m)
+    Omega      = np.arange(0,Omega_max,dO)                              # Array of angular frequency points
+    wavelength = np.insert(((2*pi*c)/Omega[1:]), 0, ((2*pi*c)/dO)  )    # Convert omega to wavelength (m). Insert additional value so arrays are always the same size. np.insert(Original array, position, value to be added)
 
-    # Previously I returned spectrum[1:] but this caused problems with get_central_wavelength
     return magnitude_conversion(wavelength, "", wavelength_unit), spectrum
 
 
