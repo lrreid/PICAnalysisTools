@@ -8,13 +8,15 @@ Possible change:
 """
 
 import numpy as np
-from scipy.constants import c, m_e, e, pi
+from scipy.constants import c, m_e, e, pi, epsilon_0
 from scipy.signal import hilbert
 from os.path import exists, join
 from os import makedirs, getcwd
 from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, get_order_letter
 from PICAnalysisTools.utils.statistics import w_std
 from PICAnalysisTools.utils.plot_limits import plt_limits
+
+mu_0 = 4*pi*1e-7
 
 import matplotlib.pyplot as plt
 
@@ -319,3 +321,16 @@ def get_laser_cenroid(ts, snapshot, centroid_unit: str = "micro"):
     Peak        = info_Ex.z[np.where(Ex_env == np.max(Ex_env))[0][0]]
 
     return magnitude_conversion(centroid, "", centroid_unit), magnitude_conversion(Peak, "", centroid_unit)
+
+
+def get_laser_energy(ts, snapshot, energy_unit: str = ""):
+
+    Er, info_field = ts.get_field( iteration=snapshot, field='E', m=1, coord='r')
+    Br, _          = ts.get_field( iteration=snapshot, field='B', m=1, coord='r') 
+    
+    # vol = pi * info.dz * ((info.r + 0.5 * info.dr) ** 2 - (info.r - 0.5 * info.dr) ** 2)
+    vol = 2 * pi * info_field.dr * info_field.r * info_field.dz
+
+    EPulse = np.sum( 0.5 * ((abs(Er)**2 * epsilon_0) + (abs(Br)**2 / mu_0)) * vol[:, None] )
+
+    return magnitude_conversion(EPulse, "", energy_unit)

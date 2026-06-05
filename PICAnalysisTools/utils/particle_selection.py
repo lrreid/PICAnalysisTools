@@ -7,9 +7,9 @@ To Do
 
 
 import numpy as np
+from PICAnalysisTools.utils.unit_conversions import magnitude_conversion
 
-
-def radial_selection(R_Select_min, R_Select_max, x, y, z, ux, uy, uz, w):
+def radial_selection(R_Select_min, R_Select_max, x, y, z, ux, uy, uz, w, select_unit: str = "milli"):
     """
     Choose radial selection of particle species macroparticles according to distance from the origin in a PIC simulation with cylindrical geometery
 
@@ -52,9 +52,12 @@ def radial_selection(R_Select_min, R_Select_max, x, y, z, ux, uy, uz, w):
         Macroparticle weights within radial selection limits
     """
 
+    R_Select_max_SI = magnitude_conversion(R_Select_max, select_unit, "")
+    R_Select_min_SI = magnitude_conversion(R_Select_min, select_unit, "")
+
     R              = np.sqrt(x**2 + y**2)                               # Find distance for origin of each macroparticle (m)
-    arg_max_radial = np.argwhere(R > R_Select_max)                      # Get indices of all macroparticles > r_max
-    arg_min_radial = np.argwhere(R < R_Select_min)                      # Get indices of all macroparticles > r_max
+    arg_max_radial = np.argwhere(R > R_Select_max_SI)                   # Get indices of all macroparticles > r_max
+    arg_min_radial = np.argwhere(R < R_Select_min_SI)                   # Get indices of all macroparticles > r_max
     indices_raidal = np.concatenate((arg_max_radial, arg_min_radial))   # Combine lists of indices to remove from data set
 
     # delete all macroparticles outwith selection

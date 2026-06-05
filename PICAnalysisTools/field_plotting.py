@@ -129,7 +129,8 @@ def plt_plasma_field(ts, snapshot, field, mode, coord, plasma_species = "rho", f
     elif field == "focus":
         field_map, info_field = get_focusing_field_map(ts = ts, Snapshot = snapshot, field_unit = field_unit)
         cbar_label = '-($E_{x}$-$cB_{y})$ (%sVm$^{-1}$)' % get_order_letter(field_unit)
-        colour_map = plt.cm.bwr
+        # colour_map = plt.cm.bwr
+        colour_map = plt.cm.PRGn_r
     else:
         field_map, info_field = ts.get_field( iteration=ts.iterations[snapshot], field=field, m=mode, coord=coord)             # Extract data for field
         field_map  = magnitude_conversion(field_map, "", field_unit)
@@ -238,7 +239,7 @@ def plt_plasma_field(ts, snapshot, field, mode, coord, plasma_species = "rho", f
     if show_beam is True:
         beam_dist = get_beam_distribution(ts, info_field, snapshot, beam_species, particle_selection, selection_limits, z_unit, r_unit, energy_unit)
         beam_proj = plt.imshow(beam_dist, cmap=cmap_white(plt.cm.plasma), extent=(extent_full_window), aspect='auto')
-        beam_proj.set_clim(0, plt_limits_log_absolute(beam_dist, offset = -1)*0.2)
+        beam_proj.set_clim(0, plt_limits_log_absolute(beam_dist, offset = -1))
 
     fig.tight_layout()
 
