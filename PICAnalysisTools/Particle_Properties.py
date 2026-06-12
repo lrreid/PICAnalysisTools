@@ -657,12 +657,12 @@ def get_beam_lineout(ts, info_field, snapshot, beam_species, position=0, r_res=N
     if r_res is None:
         r_Bins = magnitude_conversion(info_field.r, "", r_unit)
     else:
-        _, _, r_Bins = binning.get_bins_absolute(r_converted, r_res, r_res)
+        _, _, r_Bins = binning.get_bins(r_converted, r_res, r_res)
     
     if z_res is None:
         z_Bins = magnitude_conversion(info_field.z, "", z_unit)
     else:
-        _, _, z_Bins = binning.get_bins_absolute(z_converted, z_res, z_res)
+        _, _, z_Bins = binning.get_bins(z_converted, z_res, z_res)
 
     beam_dist = np.flipud(np.histogram2d(r_converted, z_converted, bins=(r_Bins, z_Bins), weights=w )[0])
 
