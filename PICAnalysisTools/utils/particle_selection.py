@@ -1,8 +1,6 @@
 '''
 particle selection
 
-To Do
-    - Add option to choose units?
 '''
 
 

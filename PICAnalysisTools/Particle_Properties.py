@@ -13,6 +13,8 @@ from scipy.constants import c, m_e, e
 from PICAnalysisTools.utils.unit_conversions import magnitude_conversion
 from PICAnalysisTools.utils import binning, statistics, rounding
 from PICAnalysisTools.utils.statistics import w_std
+from PICAnalysisTools.utils.rounding import find_pixel_number
+
 elec_rest_mass = (m_e*c**2)/e                   # Electron rest mass (eV)
 
 class ParticleEnergy():
@@ -633,3 +635,42 @@ def get_normalised_momentum(energy, energy_unit: str = "Mega"):
     energy_norm    = energy_eV/elec_rest_mass    # Threshold for including electrons in particle diagnostic (normalised units)
 
     return energy_norm
+
+
+def get_xy_transverse_properties(x, y, z, ux, uy, uz, w, r_unit: str = "micro", div_unit: str = "milli", emit_unit: str = "micro", beta_unit: str = "milli", gamma_unit: str = ""):
+
+    properties_x = ParticleTransverseProperties(r=x, ur=ux, z=z, uz=uz, w=w, r_unit = r_unit, div_unit = div_unit, emit_unit = emit_unit)
+    properties_y = ParticleTransverseProperties(r=y, ur=uy, z=z, uz=uz, w=w, r_unit = r_unit, div_unit = div_unit, emit_unit = emit_unit)
+
+    return properties_x, properties_y
+
+
+def get_beam_lineout(ts, info_field, snapshot, beam_species, position=0, r_res=None, z_res=None, r_unit: str = "micro", z_unit: str = "micro", position_unit: str = "micro"):
+
+    #### Extract data from file
+    x, z, w = ts.get_particle( ['x', 'z', 'w'], species=beam_species, iteration=ts.iterations[snapshot], plot=False)
+
+    r_converted = magnitude_conversion(x, "", r_unit)
+    z_converted = magnitude_conversion(z, "", z_unit)
+
+    #### Get histogram of beam macroparticle positions
+    if r_res is None:
+        r_Bins = magnitude_conversion(info_field.r, "", r_unit)
+    else:
+        _, _, r_Bins = binning.get_bins_absolute(r_converted, r_res, r_res)
+    
+    if z_res is None:
+        z_Bins = magnitude_conversion(info_field.z, "", z_unit)
+    else:
+        _, _, z_Bins = binning.get_bins_absolute(z_converted, z_res, z_res)
+
+    beam_dist = np.flipud(np.histogram2d(r_converted, z_converted, bins=(r_Bins, z_Bins), weights=w )[0])
+
+    #### Take lineout through the beam
+    if position == 0:
+        lineout  = beam_dist[int(len(r_Bins))//2,:]
+    else:
+        pixel_no = find_pixel_number(r_Bins, position, position_unit)
+        lineout  = beam_dist[pixel_no,:]
+
+    return z_Bins, lineout

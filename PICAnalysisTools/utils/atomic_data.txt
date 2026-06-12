@@ -1,5 +1,5 @@
 # This file was obtained from NIST Atomic Data and contains ionization
-# energies for different elements. It is read by `read_atomic_data.py`
+# energies for different elements. It is read by `ionisation.py`
 
 # In order to regenerate this data:
 # go to http://physics.nist.gov/PhysRefData/ASD/ionEnergy.html

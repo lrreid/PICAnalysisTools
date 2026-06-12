@@ -3,6 +3,7 @@ Rounding functions
 """
 
 import numpy as np
+from PICAnalysisTools.utils.unit_conversions import magnitude_conversion
 
 def roundup(x,n):
     """
@@ -102,3 +103,29 @@ def find_nearest(array, target):
     array = np.asarray(array)
     idx = (np.abs(array - target)).argmin()
     return idx, array[idx]
+
+
+
+def find_pixel_number(array, position, position_unit: str = "micro"):
+    """
+    Find the index in the field closest to a defined value
+
+    Parameters
+    ----------
+    array : array
+        array containing data
+    position : float
+        Target value that you want to find an array. Default unit: microns
+    position_unit : str, optional
+        Order of magnitude of target position unit, by default "micro"
+
+    Returns
+    -------
+    pixel_no: int
+        Index in array where value is closest to the target position.
+    """
+
+    position_SI = magnitude_conversion(position, position_unit, "")
+    pixel_no, _ = find_nearest(array, position_SI)
+
+    return pixel_no

@@ -245,9 +245,9 @@ def plt_plasma_field(ts, snapshot, field, mode, coord, plasma_species = "rho", f
 
     if save_plots is True:
         if field == "focus" or "plasma":
-            plt.savefig("%s/%s_field_ctau_%dum.png" % (Ana_dir, field, ctau), dpi=DPI, format="png")
+            plt.savefig("%s/%s_field_ctau_%09dum.png" % (Ana_dir, field, ctau), dpi=DPI, format="png")
         else:
-            plt.savefig("%s/%s_%s%s_field_ctau_%dum.png" % (Ana_dir, field, coord, mode, ctau), dpi=DPI, format="png")
+            plt.savefig("%s/%s_%s%s_field_ctau_%09dum.png" % (Ana_dir, field, coord, mode, ctau), dpi=DPI, format="png")
         plt.close()
     else:
         plt.show()
