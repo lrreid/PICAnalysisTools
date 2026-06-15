@@ -8,7 +8,7 @@ TO DO:
 
 # import numpy as np
 from numpy import histogram, histogram2d
-from PICAnalysisTools.utils import binning
+from PICAnalysisTools.core import binning
 
 
 def get_histogram_1d(data, bin_res, data_round, weights, equal_bins = False):

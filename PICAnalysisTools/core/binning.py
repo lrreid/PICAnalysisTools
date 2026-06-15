@@ -4,7 +4,7 @@ Functions to define bins for creating histograms of data.
 """
 
 import numpy as np
-from PICAnalysisTools.utils.rounding import roundup, rounddn
+from PICAnalysisTools.core.rounding import roundup, rounddn
 
 def get_bins(array, bin_res, bin_round):
     """

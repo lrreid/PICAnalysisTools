@@ -10,10 +10,8 @@ TO DO:
 
 import numpy as np
 from scipy.constants import c, m_e, e
-from PICAnalysisTools.utils.unit_conversions import magnitude_conversion
-from PICAnalysisTools.utils import binning, statistics, rounding
-from PICAnalysisTools.utils.statistics import w_std
-from PICAnalysisTools.utils.rounding import find_pixel_number
+from PICAnalysisTools.core.unit_conversions import magnitude_conversion
+from PICAnalysisTools.core import binning, statistics, rounding
 
 elec_rest_mass = (m_e*c**2)/e                   # Electron rest mass (eV)
 
@@ -346,7 +344,7 @@ class PhaseSpace():
 
         if Centre_z is True:
             # Set the centre of the beam to z = 0
-            z_centroid = w_std(Z_Bins, np.append(Ez_Phase.sum(axis=0), 0))[0]    # Sum all columns of histogram and find statistical centroid of the beam
+            z_centroid = statistics.w_std(Z_Bins, np.append(Ez_Phase.sum(axis=0), 0))[0]    # Sum all columns of histogram and find statistical centroid of the beam
             z_at_max   = rounding.round_nearest(z_centroid, z_res)              # Round centroid to the nearest histogram bin
             z_max      = z_max - z_at_max
             z_min      = z_min - z_at_max
@@ -412,7 +410,7 @@ class PhaseSpace():
 
         if Centre_t is True:
             # Set the centre of the beam to t = 0
-            z_centroid = w_std(T_Bins, np.append(Et_Phase.sum(axis=0), 0))[0]       # Sum all columns of histogram and find statistical centroid of the beam
+            z_centroid = statistics.w_std(T_Bins, np.append(Et_Phase.sum(axis=0), 0))[0]       # Sum all columns of histogram and find statistical centroid of the beam
             t_at_max   = rounding.round_nearest(z_centroid, t_res)                  # Round centroid to the nearest histogram bin
             t_max      = t_max - t_at_max
             t_min      = t_min - t_at_max
@@ -670,7 +668,7 @@ def get_beam_lineout(ts, info_field, snapshot, beam_species, position=0, r_res=N
     if position == 0:
         lineout  = beam_dist[int(len(r_Bins))//2,:]
     else:
-        pixel_no = find_pixel_number(r_Bins, position, position_unit)
+        pixel_no = rounding.find_pixel_number(r_Bins, position, position_unit)
         lineout  = beam_dist[pixel_no,:]
 
     return z_Bins, lineout

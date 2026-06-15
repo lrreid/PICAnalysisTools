@@ -4,7 +4,7 @@ Simple plasma calculations and conversions
 
 import numpy as np
 from scipy.constants import c, e, pi, epsilon_0, m_e
-from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, magnitude_conversion_vol
+from PICAnalysisTools.core.unit_conversions import magnitude_conversion, magnitude_conversion_vol
 
 class PlasmaDen_Conversions():
 

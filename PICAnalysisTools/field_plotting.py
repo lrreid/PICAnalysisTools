@@ -18,15 +18,16 @@ import numpy as np
 from scipy.constants import c
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
+
+from PICAnalysisTools.core.rounding import normalise
+from PICAnalysisTools.core.unit_conversions import magnitude_conversion, get_order_letter
+from PICAnalysisTools.utils.sim_path import set_analysis_path
+from PICAnalysisTools.plt_tools.plot_limits import plt_limits_log, plt_limits_log_absolute, plt_limits_absolute
+from PICAnalysisTools.plt_tools.white_background_colormap import cmap_white
+from PICAnalysisTools.phys_calcs.plasma_calcs import PlasmaDen_Conversions
 from PICAnalysisTools.Field_Properties import FieldProperites, PlasmaField, get_focusing_field_map
 from PICAnalysisTools.Particle_Properties import BeamProjection, get_normalised_momentum
 from PICAnalysisTools.Laser_Properties import get_a0_field_map, get_laser_cenroid
-from PICAnalysisTools.utils.sim_path import set_analysis_path
-from PICAnalysisTools.utils.plot_limits import plt_limits_log, plt_limits_log_absolute, plt_limits_absolute
-from PICAnalysisTools.utils.white_background_colormap import cmap_white
-from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, get_order_letter
-from PICAnalysisTools.utils.plasma_calcs import PlasmaDen_Conversions
-from PICAnalysisTools.utils.rounding import normalise
 
 #%% Extract data from file
 

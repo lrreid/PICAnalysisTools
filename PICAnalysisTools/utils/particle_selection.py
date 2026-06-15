@@ -3,9 +3,8 @@ particle selection
 
 '''
 
-
 import numpy as np
-from PICAnalysisTools.utils.unit_conversions import magnitude_conversion
+from PICAnalysisTools.core.unit_conversions import magnitude_conversion
 
 def radial_selection(R_Select_min, R_Select_max, x, y, z, ux, uy, uz, w, select_unit: str = "milli"):
     """

@@ -12,8 +12,8 @@ To Do:
 
 import numpy as np
 from scipy.constants import c, e, pi, epsilon_0, m_e, h
-from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, magnitude_conversion_area # type: ignore
-from PICAnalysisTools.utils.basic_calcs import area_circle, area_circle_projection
+from PICAnalysisTools.core.unit_conversions import magnitude_conversion, magnitude_conversion_area
+from PICAnalysisTools.utils.basic_calcs import area_circle
 
 class laser_wavelength_conversions():
 

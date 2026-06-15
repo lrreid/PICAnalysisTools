@@ -5,7 +5,7 @@ Functions related to propagation of Gaussian laser beams
 
 import numpy as np
 from scipy.constants import pi
-from PICAnalysisTools.utils.unit_conversions import magnitude_conversion
+from PICAnalysisTools.core.unit_conversions import magnitude_conversion
 
 
 def rayleigh_length(w0, lambda0, spot_unit: str = "micro", wavelength_unit: str = "nano", rayleigh_unit: str = "milli"):

@@ -3,7 +3,7 @@ Rounding functions
 """
 
 import numpy as np
-from PICAnalysisTools.utils.unit_conversions import magnitude_conversion
+from PICAnalysisTools.core.unit_conversions import magnitude_conversion
 
 def roundup(x,n):
     """

@@ -10,7 +10,7 @@ TO DO:
 
 import numpy as np
 from scipy.constants import pi
-from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, magnitude_conversion_area
+from PICAnalysisTools.core.unit_conversions import magnitude_conversion, magnitude_conversion_area
 
 
 def area_circle(diameter, dia_unit: str = "milli", area_unit: str = "centi"):

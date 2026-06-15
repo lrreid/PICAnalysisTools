@@ -7,9 +7,9 @@ TO DO:
 """
 import numpy as np
 from scipy.constants import c, e
-from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, magnitude_conversion_vol
-from PICAnalysisTools.utils.statistics import D4S_centroid
-from PICAnalysisTools.utils.rounding import find_nearest
+from PICAnalysisTools.core.unit_conversions import magnitude_conversion, magnitude_conversion_vol
+from PICAnalysisTools.core.statistics import D4S_centroid
+from PICAnalysisTools.core.rounding import find_nearest
 
 class FieldProperites():
 

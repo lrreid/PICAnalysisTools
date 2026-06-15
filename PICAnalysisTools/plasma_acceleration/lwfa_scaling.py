@@ -7,9 +7,10 @@ TO DO:
 
 import numpy as np
 from scipy.constants import c, e, pi, epsilon_0, m_e, hbar
-from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, magnitude_conversion_vol
-from PICAnalysisTools.utils.laser_calcs import laser_wavelength_conversions
-from PICAnalysisTools.utils.plasma_calcs import PlasmaDen_Conversions, plasma_density_from_wavevector, critical_density
+from PICAnalysisTools.core.unit_conversions import magnitude_conversion, magnitude_conversion_vol
+from PICAnalysisTools.phys_calcs.laser_calcs import laser_wavelength_conversions
+from PICAnalysisTools.phys_calcs.plasma_calcs import PlasmaDen_Conversions, plasma_density_from_wavevector, critical_density
+
 re       = (e**2)/(4*pi*epsilon_0*m_e*c**2)                     # classial electron radius
 PC_const = (8*pi*epsilon_0*m_e**2*c**5)/(e**2)                  # critical power constant (W)
 P_rel    = 0.5*PC_const                                         # Relativistic power unit (W)

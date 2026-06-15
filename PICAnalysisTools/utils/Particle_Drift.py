@@ -1,6 +1,6 @@
 
 import numpy as np
-from PICAnalysisTools.utils.unit_conversions import magnitude_conversion
+from PICAnalysisTools.core.unit_conversions import magnitude_conversion
 from PICAnalysisTools.utils.particle_selection import radial_selection
 
 def simple_drift(x, y, ux, uy, uz, drift_dist, drift_unit: str = "milli"):

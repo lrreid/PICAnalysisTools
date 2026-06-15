@@ -7,10 +7,10 @@ read_ionization_energies() adapted from a function of the same name in fbpic (re
 import numpy as np
 import re
 import os
-from scipy.constants import c, e, pi, epsilon_0, m_e
+from scipy.constants import c, e, pi, epsilon_0
 from PICAnalysisTools.utils.elements import get_element_name
-from PICAnalysisTools.utils.laser_calcs import a0_from_intensity
-from PICAnalysisTools.utils.unit_conversions import magnitude_conversion_area
+from PICAnalysisTools.phys_calcs.laser_calcs import a0_from_intensity
+from PICAnalysisTools.core.unit_conversions import magnitude_conversion_area
 
 def read_ionization_energies( element: str, unit: str = "eV" ):
     """

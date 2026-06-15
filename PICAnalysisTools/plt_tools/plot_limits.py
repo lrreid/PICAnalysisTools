@@ -3,7 +3,7 @@ Define functions for calculating plot axes limits
 """
 
 import numpy as np
-from PICAnalysisTools.utils.rounding import roundup, rounddn
+from PICAnalysisTools.core.rounding import roundup, rounddn
 
 def get_data_order_of_magnitude(value):
     """

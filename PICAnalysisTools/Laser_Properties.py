@@ -12,9 +12,9 @@ from scipy.constants import c, m_e, e, pi, epsilon_0
 from scipy.signal import hilbert
 from os.path import exists, join
 from os import makedirs, getcwd
-from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, get_order_letter
-from PICAnalysisTools.utils.statistics import w_std
-from PICAnalysisTools.utils.plot_limits import plt_limits
+from PICAnalysisTools.core.unit_conversions import magnitude_conversion, get_order_letter
+from PICAnalysisTools.core.statistics import w_std
+from PICAnalysisTools.plt_tools.plot_limits import plt_limits
 
 mu_0 = 4*pi*1e-7
 

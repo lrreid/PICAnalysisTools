@@ -4,7 +4,7 @@ Functions for calculating quantities and matching conditions for beam driven wak
 
 import numpy as np
 from scipy.constants import c, e, pi, epsilon_0, m_e
-from PICAnalysisTools.utils.unit_conversions import magnitude_conversion, magnitude_conversion_vol
+from PICAnalysisTools.core.unit_conversions import magnitude_conversion, magnitude_conversion_vol
 
 def resonant_ne(condition: str, sigmaZ, sigma_unit: str = "micro", den_unit: str = "centi"):
     """
