@@ -1,11 +1,13 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from PICAnalysisTools.utils.ionisation import read_ionization_energies, ionisation_intensity_theshold
-from PICAnalysisTools.utils.unit_conversions import get_order_letter
-from PICAnalysisTools.utils.plot_limits import plt_limits, plt_limits_log
+
+from PICAnalysisTools.core.unit_conversions import get_order_letter
 from PICAnalysisTools.utils.elements import get_element_name
-from PICAnalysisTools.utils.laser_calcs import Gaussian_laser_intensitiy
+from PICAnalysisTools.phys_calcs.ionisation import read_ionization_energies, ionisation_intensity_theshold
+from PICAnalysisTools.phys_calcs.laser_calcs import Gaussian_laser_intensitiy
+from PICAnalysisTools.plt_tools.plot_limits import plt_limits, plt_limits_log
+
 fsize = 12
 
 #%% Check ionisation energies function

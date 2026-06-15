@@ -6,15 +6,13 @@ To use, you must set your own FolderPath and Simulation to simulaton data which 
 
 import numpy as np
 from openpmd_viewer.addons import LpaDiagnostics
-from PICAnalysisTools.Laser_Properties import LaserProperties
+from PICAnalysisTools.Laser_Properties import LaserProperties, get_central_wavelength
 from PICAnalysisTools.utils.sim_path import set_sim_path
-from PICAnalysisTools.Laser_Properties import get_central_wavelength
 fsize = 12
 
 #%% Read data from files
 
-FolderPath = r'/home/lewis'
-# FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools'
+FolderPath = 'path/to/simulation'
 Simulation = 'example_data'
 FilePath, SimPath   = set_sim_path(FolderPath, Simulation, boosted_frame=False)
 

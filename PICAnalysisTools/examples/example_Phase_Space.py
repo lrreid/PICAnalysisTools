@@ -15,12 +15,13 @@ from openpmd_viewer import OpenPMDTimeSeries        # This should be used for pm
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import FormatStrFormatter
 
-from PICAnalysisTools.utils.white_background_colormap import cmap_white
-from PICAnalysisTools.Particle_Properties import PhaseSpace, BeamProjection, get_normalised_momentum
+from PICAnalysisTools.core.unit_conversions import magnitude_conversion
 from PICAnalysisTools.utils.particle_selection import radial_selection
 from PICAnalysisTools.utils.sim_path import set_sim_path
-from PICAnalysisTools.utils.plot_limits import plt_limits_log
-from PICAnalysisTools.utils.unit_conversions import magnitude_conversion
+from PICAnalysisTools.Particle_Properties import PhaseSpace, BeamProjection, get_normalised_momentum
+from PICAnalysisTools.plt_tools.white_background_colormap import cmap_white
+from PICAnalysisTools.plt_tools.plot_limits import plt_limits_log
+
 
 # from matplotlib import use
 # use("Agg")                  # "Agg" makes it possible to save plots without a display attached. Useful for analysis on remote computing cluster.
@@ -29,8 +30,7 @@ fsize = 12
 
 #%% Read data from files
 
-# FolderPath = r'/home/lewis'
-FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools\PICAnalysisTools'
+FolderPath = 'path/to/simulation'
 Simulation = 'example_data'
 Species    = "electrons"
 

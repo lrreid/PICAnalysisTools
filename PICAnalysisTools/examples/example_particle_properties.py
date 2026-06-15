@@ -8,7 +8,7 @@ from scipy.constants import c
 from openpmd_viewer import OpenPMDTimeSeries        # This should be used for pmd viewer version 1.x.
 from PICAnalysisTools.Particle_Properties import ParticleEnergy, ParticleTransverseProperties, get_normalised_momentum
 from PICAnalysisTools.utils.sim_path import set_sim_path
-from PICAnalysisTools.utils.plot_limits import plt_limits_log
+from PICAnalysisTools.plt_tools.plot_limits import plt_limits_log
 
 # from matplotlib import use
 # use("Agg")                  # "Agg" makes it possible to save plots without a display attached. Useful for analysis on remote computing cluster.
@@ -17,8 +17,7 @@ fsize = 12
 
 #%% Read data from files
 
-# FolderPath = r'/home/lewis'
-FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools\PICAnalysisTools'
+FolderPath = 'path/to/simulation'
 Simulation = 'example_data'
 Species    = "electrons"
 

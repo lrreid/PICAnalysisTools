@@ -7,7 +7,7 @@ from PICAnalysisTools.utils.sim_path import set_sim_path
 plasma_species = "rho_plasma_elec"
 beam_species   = 'electrons'
 
-FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools\PICAnalysisTools'
+FolderPath = 'path/to/simulation'
 Simulation = 'example_data'
 FilePath, SimPath = set_sim_path(FolderPath, Simulation, boosted_frame=False)
 

@@ -12,15 +12,17 @@ import numpy as np
 from scipy.constants import c
 import matplotlib.pyplot as plt
 from openpmd_viewer import OpenPMDTimeSeries
-from PICAnalysisTools.Field_Properties import FieldProperites, PlasmaField
-from PICAnalysisTools.Laser_Properties import get_laser_cenroid
-from PICAnalysisTools.Particle_Properties import BeamProjection
+
+from PICAnalysisTools.core.unit_conversions import magnitude_conversion
+from PICAnalysisTools.core.rounding import roundup
 from PICAnalysisTools.utils.sim_path import set_sim_path, set_analysis_path
-from PICAnalysisTools.Laser_Properties import get_a0_field_map
-from PICAnalysisTools.utils.plot_limits import plt_limits_log, plt_limits_log_absolute
-from PICAnalysisTools.utils.white_background_colormap import cmap_white
-from PICAnalysisTools.utils.plot_limits import roundup
-from PICAnalysisTools.utils.unit_conversions import magnitude_conversion
+from PICAnalysisTools.Field_Properties import FieldProperites, PlasmaField
+from PICAnalysisTools.Particle_Properties import BeamProjection
+from PICAnalysisTools.Laser_Properties import get_laser_cenroid, get_a0_field_map
+from PICAnalysisTools.plt_tools.plot_limits import plt_limits_log, plt_limits_log_absolute
+from PICAnalysisTools.plt_tools.white_background_colormap import cmap_white
+
+
 
 fsize = 12
 
@@ -33,8 +35,7 @@ show_beam           = True
 plasma_species = "rho_plasma_elec"
 beam_species   = 'electrons'
 
-# FolderPath = r'/home/lewis'
-FolderPath = r'C:\Users\ryi76833\OneDrive - Science and Technology Facilities Council\Documents\Python_Programs\PICAnalysisTools\PICAnalysisTools'
+FolderPath = 'path/to/simulation'
 Simulation = 'example_data'
 Ana_name   = 'field_plotting_tests'
 FilePath, SimPath = set_sim_path(FolderPath, Simulation, boosted_frame=False)

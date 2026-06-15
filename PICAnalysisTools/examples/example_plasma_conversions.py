@@ -7,8 +7,7 @@ Check that the functions give the expected answers with the correct units. Compa
 
 import numpy as np
 from scipy.constants import c, e, pi, epsilon_0, m_e
-from PICAnalysisTools.utils.plasma_calcs import PlasmaDen_Conversions
-from PICAnalysisTools.utils.plasma_calcs import *
+from PICAnalysisTools.phys_calcs.plasma_calcs import *
 
 #%% Script variables
 
