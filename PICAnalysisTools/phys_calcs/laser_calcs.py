@@ -116,7 +116,7 @@ class laser_wavelength_conversions():
 
         return magnitude_conversion(Eph_eV, "", self.eV_unit), magnitude_conversion(Eph_J, "", self.energy_unit)
 
-#%% Focusing of top hat beams
+#%% Focusing of Gaussian beams
 
 def a0_from_intensity(Int, lambda0: float = 800, int_unit: str = "centi", wavelength_unit: str = "nano"):
     """
@@ -174,20 +174,22 @@ def intensity_from_a0(a0, lambda0: float = 800, wavelength_unit: str = "nano", i
     return magnitude_conversion_area(Int, "", int_unit, reciprocal_units = True)
 
 
-def Gaussian_laser_intensitiy(Energy, tau_FWHM, w0, lambda0: float = 800, energy_unit: str = "milli", time_unit: str = "femto", spot_unit: str = "micro", wavelength_unit: str = "nano", int_unit: str = "centi"):
+def Gaussian_laser_intensitiy(Energy, tau_FWHM, spot, lambda0: float = 800, spot_type: str = "e2", energy_unit: str = "milli", time_unit: str = "femto", spot_unit: str = "micro", wavelength_unit: str = "nano", int_unit: str = "centi"):
     """
     Calculate peak intensity of a Gaussian beam from experimentally measurable values.
 
     Parameters
     ----------
     Energy : float
-        Laser energy within focus. Default unit: mJ
+        Laser pulse energy. Default unit: mJ
     tau_FWHM : float
         Pulse duration to FWHM. Default unit: fs
-    w0 : float
-        Laser spot size to 1/e^2 radius. Default unit: microns
+    spot : float
+        Laser spot size. Default unit: microns
     lambda0 : int, optional
         Laser central wavelength, by default 800 nm
+    spot_type : str, optional
+        Type of spot size definition. Choose either "e2" for the 1/e^2 radius or "FWHM", by default "e2"
     energy_unit : str, optional
         Order of magnitude of energy unit, by default "milli"
     time_unit : str, optional
@@ -209,43 +211,198 @@ def Gaussian_laser_intensitiy(Energy, tau_FWHM, w0, lambda0: float = 800, energy
 
     Energy_SI   = magnitude_conversion(Energy, energy_unit, "")
     tau_FWHM_SI = magnitude_conversion(tau_FWHM, time_unit, "")
-    w0_SI       = magnitude_conversion(w0, spot_unit, "")
+    spot_SI     = magnitude_conversion(spot, spot_unit, "")
     lambda0_SI  = magnitude_conversion(lambda0, wavelength_unit, "")
 
-    Int = (2*Energy_SI)/(tau_FWHM_SI*pi*w0_SI**2)                                                # Intensity (W/m^2). Gaussian profile assumed.
-    a0  = ((e*lambda0_SI)/(pi*m_e*c**2*w0_SI)) * np.sqrt( Energy_SI/(pi*epsilon_0*c*tau_FWHM_SI) )  # Laser amplitude. Gaussian profile assumed.
+    if spot_type not in ["e2", "FWHM", "fwhm"]:
+        print("Spot type incorrectly defined. Choose e2 or FWHM. Defaulted to e2.")
+        spot_type = "e2"
+
+    if spot_type == "e2":
+        # Equation 12 in notes
+        Int = 4*np.sqrt(np.log(2)/pi**3)*(Energy_SI/(tau_FWHM_SI*spot_SI**2))
+        # Equation 17 in notes
+        a0  = ((e*lambda0_SI)/(m_e*spot_SI)) * (np.log(2)/pi**7)**0.25 * np.sqrt(2*Energy_SI/(epsilon_0*c**5*tau_FWHM_SI))  # Laser normalised vector potential.
+
+    elif spot_type == "FWHM" or spot_type == "fwhm":
+        # Equation 13 in notes
+        Int = (((4*np.log(2))/pi)**(3/2))*(Energy_SI/(tau_FWHM_SI*spot_SI**2))
+        a0 = ((2*e*lambda0_SI)/(m_e*spot_SI)) * (np.log(2)**3/pi**7)**0.25 * np.sqrt(Energy_SI/(epsilon_0*c**5*tau_FWHM_SI))  # Laser normalised vector potential.
+    
 
     return magnitude_conversion_area(Int, "", int_unit, reciprocal_units = True), a0
 
 
-def Gaussian_spot_size_from_intensity(Energy, tau_FWHM, Int, energy_unit: str = "milli", time_unit: str = "femto", int_unit: str = "centi", spot_unit: str = "micro" ):
-    
+def Gaussian_spot_size_from_intensity(Energy, tau_FWHM, Int, spot_type: str = "e2", energy_unit: str = "milli", time_unit: str = "femto", int_unit: str = "centi", spot_unit: str = "micro" ):
+    """
+    Calculate the laser spot size from a given peak intensity, pulse energy and pulse duration.
+
+    Parameters
+    ----------
+    Energy : float
+        Laser pulse energy. Default unit: mJ
+    tau_FWHM : float
+        Pulse duration to FWHM. Default unit: fs
+    Int : float
+        Laser peak intensity. Default unit: Wcm^-2
+    spot_type : str, optional
+        Type of spot size definition. Choose either "e2" for the 1/e^2 radius or "FWHM", by default "e2"
+    energy_unit : str, optional
+        Order of magnitude of energy unit, by default "milli"
+    time_unit : str, optional
+        Order of magnitude of time unit, by default "femto"
+    int_unit : str, optional
+        Order of magnitude of intensity unit, by default "centi"
+    spot_unit : str, optional
+        Order of magnitude of spot size unit, by default "micro"
+
+    Returns
+    -------
+    spot_size: float
+        Laser spot size. Default unit: microns
+    """
+
     Energy_SI   = magnitude_conversion(Energy, energy_unit, "")
     tau_FWHM_SI = magnitude_conversion(tau_FWHM, time_unit, "") 
     Int_SI      = magnitude_conversion_area(Int, int_unit, "", reciprocal_units = True)
-    
-    spot_size = (2*Energy_SI)/(tau_FWHM_SI*pi*Int_SI)
-    
+
+    if spot_type not in ["e2", "FWHM", "fwhm"]:
+        print("Spot type incorrectly defined. Choose e2 or FWHM. Defaulted to e2.")
+        spot_type = "e2"
+
+    if spot_type == "e2":
+        # Equation 12 in notes, rearranged to give w0 in terms of Int, Energy and tau_FWHM
+        spot_size = np.sqrt((4*Energy_SI)/(Int_SI*tau_FWHM_SI)) * (np.log(2)/pi**3)**0.25
+
+    elif spot_type == "FWHM" or spot_type == "fwhm":
+        # Equation 13 in notes, rearranged to give fwhm in terms of Int, Energy and tau_FWHM
+        spot_size = np.sqrt((Energy_SI)/(Int_SI*tau_FWHM_SI)) * ((4*np.log(2)/pi)**(3/4))
+
     return magnitude_conversion(spot_size, "", spot_unit)
 
 
-def Gaussian_Energy_from_intenstiy(tau_FWHM, w0, Int, time_unit: str = "femto", spot_unit: str = "micro", int_unit: str = "centi", energy_unit: str = "milli"):
+def Gaussian_Energy_from_intenstiy(tau_FWHM, spot, Int, spot_type: str = "e2", time_unit: str = "femto", spot_unit: str = "micro", int_unit: str = "centi", energy_unit: str = "milli"):
+    """
+    Calculate the laser pulse energy from a given peak intensity, spot size and pulse duration
 
+    Parameters
+    ----------
+    tau_FWHM : float
+        Pulse duration to FWHM. Default unit: fs
+    spot : float
+        Laser spot size. Default unit: microns
+    Int : float
+        Laser peak intensity. Default unit: Wcm^-2
+    spot_type : str, optional
+        Type of spot size definition. Choose either "e2" for the 1/e^2 radius or "FWHM", by default "e2"
+    time_unit : str, optional
+        Order of magnitude of time unit, by default "femto"
+    spot_unit : str, optional
+        Order of magnitude of spot size unit, by default "micro"
+    int_unit : str, optional
+        Order of magnitude of intensity unit, by default "centi"
+    energy_unit : str, optional
+        Order of magnitude of energy unit, by default "milli"
+
+    Returns
+    -------
+    float
+        Laser pulse energy. Default unit: mJ
+    """
     tau_FWHM_SI = magnitude_conversion(tau_FWHM, time_unit, "")
-    w0_SI       = magnitude_conversion(w0, spot_unit, "")
+    spot_SI     = magnitude_conversion(spot, spot_unit, "")
     Int_SI      = magnitude_conversion_area(Int, int_unit, "", reciprocal_units = True)
-    
-    Energy = 0.5*Int_SI*tau_FWHM_SI*pi*(w0_SI**2)
+
+    if spot_type not in ["e2", "FWHM", "fwhm"]:
+        print("Spot type incorrectly defined. Choose e2 or FWHM. Defaulted to e2.")
+        spot_type = "e2"
+
+    if spot_type == "e2":
+        # Equation 12 in notes, rearranged to give energy in terms of Int, spot size and tau_FWHM
+        Energy = np.sqrt(pi**3/(np.log(2))) * ((Int_SI*tau_FWHM_SI*spot_SI**2)/4)
+
+    elif spot_type == "FWHM" or spot_type == "fwhm":
+        # Equation 13 in notes, rearranged to give energy in terms of Int, fwhm `spot size and tau_FWHM
+        Energy = (pi/(4*np.log(2)))**(3/2) * (Int_SI*tau_FWHM_SI*spot_SI**2)
     
     return magnitude_conversion(Energy, "", energy_unit)
 
 
-def get_laser_power(Energy, tau_FWHM, energy_unit: str = "milli", time_unit: str = "femto", power_unit: str = "Tera"):
+def pulse_energy_from_a0(tau_FWHM, spot, a0, lambda0: float = 800, spot_type: str = "e2", time_unit: str = "femto", spot_unit: str = "micro", wavelength_unit: str = "nano", energy_unit: str = "milli"):
+    """
+    Calculate the laser pulse energy from a given normalised vector potential, spot size and pulse duration
 
+    Parameters
+    ----------
+    tau_FWHM : float
+        Pulse duration to FWHM. Default unit: fs
+    spot : float
+        Laser spot size. Default unit: microns
+    a0 : float
+        Normalised vector potential. Default unit: dimensionless
+    lambda0 : float, optional
+        Laser wavelength. Default unit: nm, by default 800
+    spot_type : str, optional
+        Type of spot size definition. Choose either "e2" for the 1/e^2 radius or "FWHM", by default "e2"
+    time_unit : str, optional
+        Order of magnitude of time unit, by default "femto"
+    spot_unit : str, optional
+        Order of magnitude of spot size unit, by default "micro"
+    wavelength_unit : str, optional
+        Order of magnitude of wavelength unit, by default "nano"
+    energy_unit : str, optional
+        Order of magnitude of energy unit, by default "milli"
+
+    Returns
+    -------
+    energy_unit : str, optional
+        Order of magnitude of energy unit, by default "milli"
+    """
+    tau_FWHM_SI = magnitude_conversion(tau_FWHM, time_unit, "")
+    spot_SI     = magnitude_conversion(spot, spot_unit, "")
+    lambda0_SI  = magnitude_conversion(lambda0, wavelength_unit, "")
+
+    if spot_type not in ["e2", "FWHM", "fwhm"]:
+        print("Spot type incorrectly defined. Choose e2 or FWHM. Defaulted to e2.")
+        spot_type = "e2"
+
+    if spot_type == "e2":
+        # Equation 22 in notes
+        Energy = ((epsilon_0*c**5*tau_FWHM_SI)/2) * ((a0*spot_SI*m_e)/(e*lambda0_SI))**2 * np.sqrt(pi**7/np.log(2))
+
+    elif spot_type == "FWHM" or spot_type == "fwhm":
+        # Equation 23 in notes
+        Energy = ((epsilon_0*c**5*tau_FWHM_SI)/4) * ((a0*spot_SI*m_e)/(e*lambda0_SI))**2 * np.sqrt(pi**7/(np.log(2)**3))
+
+    return magnitude_conversion(Energy, "", energy_unit)
+
+def get_laser_power(Energy, tau_FWHM, energy_unit: str = "milli", time_unit: str = "femto", power_unit: str = "Tera"):
+    """
+    Calculate the peak laser power of a Gaussian pulse from the laser energy and pulse duration.
+
+    Parameters
+    ----------
+    Energy : float
+        Laser energy within the laser pulse. Default unit: mJ
+    tau_FWHM : float
+        Pulse duration to FWHM. Default unit: fs
+    energy_unit : str, optional
+        Order of magnitude of energy unit, by default "milli"
+    time_unit : str, optional
+        Order of magnitude of time unit, by default "femto"
+    power_unit : str, optional
+        Order of magnitude of power unit, by default "Tera"
+
+    Returns
+    -------
+    power: float
+        Laser power. Default unit: TW
+    """
     Energy_SI   = magnitude_conversion(Energy, energy_unit, "")
     tau_FWHM_SI = magnitude_conversion(tau_FWHM, time_unit, "") 
     
-    Power = Energy_SI/tau_FWHM_SI
+    # Equation 10 in notes.
+    Power = 2*np.sqrt(np.log(2)/pi)*(Energy_SI/tau_FWHM_SI)
     
     return magnitude_conversion(Power, "", power_unit)
 
