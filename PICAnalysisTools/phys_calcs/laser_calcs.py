@@ -504,6 +504,114 @@ def top_hat_laser_intensity_from_spot(Energy, tau_FWHM, lambda0, omega_0, energy
     
     return magnitude_conversion_area(Int, "", int_unit, reciprocal_units = True), a0
 
+
+#%% laser intensity calculations
+
+def get_laser_intensity(E_field, field_unit: str = "", int_unit: str = "centi"):
+    """
+    Calculate the laser intensity from the peak electric field
+
+    Parameters
+    ----------
+    E_field : float
+        Laser peak electric field. Default unit: V/m
+    field_unit : str, optional
+        Order of magnitude of electric field units, by default ""
+    int_unit : str, optional
+        Order of magnitude of intensity units, by default "centi"
+
+    Returns
+    -------
+    Int: float
+        Laser peak intensity. Default unit: Wcm^-2
+    """
+
+    E_field_SI = magnitude_conversion(E_field, field_unit, "")
+    Int        = ((epsilon_0*c)/2)*E_field_SI**2
+
+    return magnitude_conversion_area(Int, "", int_unit, reciprocal_units = True)
+
+
+def get_field_from_intensity(Int, int_unit: str = "centi", field_unit: str = ""):
+    """
+    Calculate the laser electric field from the peak intensity
+
+    Parameters
+    ----------
+    Int : float
+        Laser peak intensity. Default unit: Wcm^-2
+    int_unit : str, optional
+        Order of magnitude of intensity units, by default "centi"
+    field_unit : str, optional
+        Order of magnitude of electric field units, by default ""
+
+    Returns
+    -------
+    E: float
+        Laser electric field. Default unit: V/m
+    """
+
+    Int_SI = magnitude_conversion_area(Int, int_unit, "", reciprocal_units = True)
+    E_field      = np.sqrt(2*Int_SI/(c*epsilon_0))
+
+    return magnitude_conversion(E_field, "", field_unit)
+
+
+def get_field_from_a0(a0, lambda0: float = 800, wavelength_unit: str = "nano", field_unit: str = ""):
+    """
+    Calculate the laser electric field from the normalised vector potential
+
+    Parameters
+    ----------
+    a0 : float
+        Normalised vector potential
+    lambda0 : int, optional
+        Laser central wavelength, by default 800 nm
+    wavelength_unit : str, optional
+        Order of magnitude of wavelength units, by default "nano"
+    field_unit : str, optional
+        Order of magnitude of electric field units, by default ""
+
+    Returns
+    -------
+    E: float
+        Laser electric field. Default unit: V/m
+    """
+
+    lambda0_SI = magnitude_conversion(lambda0, wavelength_unit, "")
+    E_field    = (2*pi*m_e*c**2*a0)/(e*lambda0_SI)
+
+    return magnitude_conversion(E_field, "", field_unit)  
+
+
+def get_a0_from_field(E_field, lambda0: float = 800, field_unit: str = "", wavelength_unit: str = "nano"):
+    """
+    Calculate the normalised vector potential from the laser electric field
+
+    Parameters
+    ----------
+    E_field : float
+        Laser peak electric field. Default unit: V/m
+    lambda0 : int, optional
+        Laser central wavelength, by default 800 nm
+    wavelength_unit : str, optional
+        Order of magnitude of wavelength units, by default "nano"
+    field_unit : str, optional
+        Order of magnitude of electric field units, by default ""
+
+    Returns
+    -------
+    a0: float
+        Normalised vector potential.
+    """
+
+    lambda0_SI = magnitude_conversion(lambda0, wavelength_unit, "")
+    E_field_SI = magnitude_conversion(E_field, field_unit, "")
+    a0         = (e*lambda0_SI*E_field_SI)/(2*pi*m_e*c**2)
+
+    return a0
+
+
 #%% Other calculations
 
 def photon_energy_from_wavelength(lambda0: float = 800, wavelength_unit: str = "nano", eV_unit: str = "", energy_unit: str = ""):
